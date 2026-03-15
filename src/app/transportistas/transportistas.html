@@ -1,0 +1,234 @@
+<section class="p-3">
+  <button class="btn btn-primary mb-3" (click)="toggleAddForm()">
+    {{ showAddForm() ? 'Cancelar' : 'Agregar transportista' }}
+  </button>
+
+  <div *ngIf="showAddForm()" class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Nuevo Transportista</h5>
+      <form [formGroup]="addForm" (ngSubmit)="addNew()">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="addNombreTransporte" class="form-label">Nombre del Transporte</label>
+            <input type="text" class="form-control" id="addNombreTransporte" formControlName="nombreTransporte">
+            <div *ngIf="addForm.get('nombreTransporte')?.invalid && addForm.get('nombreTransporte')?.touched" class="text-danger">
+              Nombre requerido.
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="addCuitTransporte" class="form-label">CUIT Transporte</label>
+            <input type="text" class="form-control" id="addCuitTransporte" formControlName="cuitTransporte">
+            <div *ngIf="addForm.get('cuitTransporte')?.invalid && addForm.get('cuitTransporte')?.touched" class="text-danger">
+              CUIT numérico requerido.
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="addNombreChofer" class="form-label">Nombre del Chofer</label>
+            <input type="text" class="form-control" id="addNombreChofer" formControlName="nombreChofer">
+            <div *ngIf="addForm.get('nombreChofer')?.invalid && addForm.get('nombreChofer')?.touched" class="text-danger">
+              Nombre requerido.
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="addCuitChofer" class="form-label">CUIT Chofer</label>
+            <input type="text" class="form-control" id="addCuitChofer" formControlName="cuitChofer">
+            <div *ngIf="addForm.get('cuitChofer')?.invalid && addForm.get('cuitChofer')?.touched" class="text-danger">
+              CUIT numérico requerido.
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="addPatenteChasis" class="form-label">Patente Chasis</label>
+            <input type="text" class="form-control" id="addPatenteChasis" formControlName="patenteChasis" placeholder="Ej: AA111AA o AAA111">
+            <div *ngIf="addForm.get('patenteChasis')?.invalid && addForm.get('patenteChasis')?.touched" class="text-danger">
+              Formato inválido (LLNNNLL o LLLNNN, letras mayúsculas/minúsculas).
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="addPatenteAcoplado" class="form-label">Patente Acoplado</label>
+            <input type="text" class="form-control" id="addPatenteAcoplado" formControlName="patenteAcoplado" placeholder="Ej: AA111AA o AAA111">
+            <div *ngIf="addForm.get('patenteAcoplado')?.invalid && addForm.get('patenteAcoplado')?.touched" class="text-danger">
+              Formato inválido (LLNNNLL o LLLNNN, letras mayúsculas/minúsculas).
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="addTipoCamion" class="form-label">Tipo de Camión</label>
+            <input type="text" class="form-control" id="addTipoCamion" formControlName="tipoCamion">
+            <div *ngIf="addForm.get('tipoCamion')?.invalid && addForm.get('tipoCamion')?.touched" class="text-danger">
+              Tipo requerido.
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="addComision" class="form-label">Comisión %</label>
+            <input type="number" class="form-control" id="addComision" formControlName="comision" min="0" max="100">
+            <div *ngIf="addForm.get('comision')?.invalid && addForm.get('comision')?.touched" class="text-danger">
+              Comisión requerida, entre 0 y 100.
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success" [disabled]="addForm.invalid">Guardar</button>
+      </form>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage()" class="alert alert-danger" role="alert">
+    {{ errorMessage() }}
+  </div>
+
+  <div class="mb-3">
+    <input type="text" class="form-control" placeholder="Buscar por nombre transporte, chofer o patente..." (input)="onSearchChange($event)">
+  </div>
+
+  <div *ngIf="loading()" class="mb-2">
+    <small class="text-muted">Cargando transportistas…</small>
+  </div>
+
+  <div *ngIf="!loading()">
+    <div *ngIf="paginatedTransportistas.length; else empty">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Nombre Transporte</th>
+              <th>CUIT Transporte</th>
+              <th>Nombre Chofer</th>
+              <th>CUIT Chofer</th>
+              <th>Patente Chasis</th>
+              <th>Patente Acoplado</th>
+              <th>Tipo Camión</th>
+              <th>Comisión %</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of paginatedTransportistas">
+              <td>{{ t.data?.nombreTransporte || 'N/A' }}</td>
+              <td>{{ t.data?.cuitTransporte || 'N/A' }}</td>
+              <td>{{ t.data?.nombreChofer || 'N/A' }}</td>
+              <td>{{ t.data?.cuitChofer || 'N/A' }}</td>
+              <td>{{ t.data?.patenteChasis || 'N/A' }}</td>
+              <td>{{ t.data?.patenteAcoplado || 'N/A' }}</td>
+              <td>{{ t.data?.tipoCamion || 'N/A' }}</td>
+              <td>{{ t.data?.comision || 0 }}%</td>
+              <td>
+                <div class="btn-group btn-group-sm" role="group" aria-label="acciones">
+                  <button class="btn btn-outline-secondary" (click)="startEdit(t)">✏️</button>
+                  <button class="btn btn-outline-danger" (click)="remove(t)">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav *ngIf="totalPages > 1" aria-label="Paginación">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="currentPage() === 1">
+            <a class="page-link" href="#" (click)="changePage(currentPage() - 1); $event.preventDefault()">Anterior</a>
+          </li>
+          <li class="page-item" *ngFor="let page of [].constructor(totalPages); let i = index" [class.active]="currentPage() === i + 1">
+            <a class="page-link" href="#" (click)="changePage(i + 1); $event.preventDefault()">{{ i + 1 }}</a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage() === totalPages">
+            <a class="page-link" href="#" (click)="changePage(currentPage() + 1); $event.preventDefault()">Siguiente</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <ng-template #empty>
+      <p class="text-muted">No hay transportistas registrados aún.</p>
+    </ng-template>
+  </div>
+
+  <!-- Modal para editar -->
+  <div *ngIf="showEditForm()" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Transportista</h5>
+          <button type="button" class="btn-close" (click)="cancelEdit()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="editNombreTransporte" class="form-label">Nombre del Transporte</label>
+                <input type="text" class="form-control" id="editNombreTransporte" formControlName="nombreTransporte">
+                <div *ngIf="editForm.get('nombreTransporte')?.invalid && editForm.get('nombreTransporte')?.touched" class="text-danger">
+                  Nombre requerido.
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="editCuitTransporte" class="form-label">CUIT Transporte</label>
+                <input type="text" class="form-control" id="editCuitTransporte" formControlName="cuitTransporte">
+                <div *ngIf="editForm.get('cuitTransporte')?.invalid && editForm.get('cuitTransporte')?.touched" class="text-danger">
+                  CUIT numérico requerido.
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="editNombreChofer" class="form-label">Nombre del Chofer</label>
+                <input type="text" class="form-control" id="editNombreChofer" formControlName="nombreChofer">
+                <div *ngIf="editForm.get('nombreChofer')?.invalid && editForm.get('nombreChofer')?.touched" class="text-danger">
+                  Nombre requerido.
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="editCuitChofer" class="form-label">CUIT Chofer</label>
+                <input type="text" class="form-control" id="editCuitChofer" formControlName="cuitChofer">
+                <div *ngIf="editForm.get('cuitChofer')?.invalid && editForm.get('cuitChofer')?.touched" class="text-danger">
+                  CUIT numérico requerido.
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="editPatenteChasis" class="form-label">Patente Chasis</label>
+                <input type="text" class="form-control" id="editPatenteChasis" formControlName="patenteChasis" placeholder="Ej: AA111AA o AAA111">
+                <div *ngIf="editForm.get('patenteChasis')?.invalid && editForm.get('patenteChasis')?.touched" class="text-danger">
+                  Formato inválido (LLNNNLL o LLLNNN, letras mayúsculas/minúsculas).
+                </div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="editPatenteAcoplado" class="form-label">Patente Acoplado</label>
+                <input type="text" class="form-control" id="editPatenteAcoplado" formControlName="patenteAcoplado" placeholder="Ej: AA111AA o AAA111">
+                <div *ngIf="editForm.get('patenteAcoplado')?.invalid && editForm.get('patenteAcoplado')?.touched" class="text-danger">
+                  Formato inválido (LLNNNLL o LLLNNN, letras mayúsculas/minúsculas).
+                </div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="editTipoCamion" class="form-label">Tipo de Camión</label>
+                <input type="text" class="form-control" id="editTipoCamion" formControlName="tipoCamion">
+                <div *ngIf="editForm.get('tipoCamion')?.invalid && editForm.get('tipoCamion')?.touched" class="text-danger">
+                  Tipo requerido.
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="editComision" class="form-label">Comisión %</label>
+                <input type="number" class="form-control" id="editComision" formControlName="comision" min="0" max="100">
+                <div *ngIf="editForm.get('editComision')?.invalid && editForm.get('editComision')?.touched" class="text-danger">
+                  Comisión requerida, entre 0 y 100.
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid">Guardar Cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+

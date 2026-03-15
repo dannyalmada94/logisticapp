@@ -1,0 +1,54 @@
+<section class="p-3">
+	<h2>Cobrados</h2>
+
+	<div *ngIf="errorMessage()" class="alert alert-danger" role="alert">
+		{{ errorMessage() }}
+	</div>
+
+	<div *ngIf="loading()" class="mb-2">
+		<small class="text-muted">Cargando cobrados…</small>
+	</div>
+
+	<div *ngIf="!loading()">
+		<div *ngIf="getCobrados().length; else empty">
+			<div class="table-responsive">
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>N.º Pedido</th>
+							<th>Cliente</th>
+							<th>Transporte</th>
+							<th>CTG</th>
+							<th>Cobrado</th>
+							<th>Fecha de Aprobacion</th>
+							<th>Acciones</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr *ngFor="let c of getCobrados()">
+							<td>{{ c.numeroPedido }}</td>
+							<td>{{ c.clienteNombre }}</td>
+							<td>{{ c.transporteNombre }}</td>
+							<td>{{ c.ctg }}</td>
+							<td>{{ c.cobrado | number:'1.2-2' }}</td>
+							<td>{{ formatFechaAprobacion(c.fechaAprobacion) }}</td>
+							<td>
+								<button
+									type="button"
+									class="btn btn-sm btn-outline-secondary"
+									(click)="revertirAFacturacion(c.pedidoId, c.transportistaId)"
+								>
+									Revertir
+								</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<ng-template #empty>
+			<p class="text-muted">No hay elementos cobrados todavía.</p>
+		</ng-template>
+	</div>
+</section>

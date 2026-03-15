@@ -1,0 +1,38 @@
+<nav class="navbar bg-body-tertiary" *ngIf="authService.isAuthenticated()">
+    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions">Menú</button>
+
+    <div class="mx-auto">
+        <button class="btn" routerLink="/home">
+            <i class="bi bi-house">Home</i>
+        </button>
+    </div>
+
+    <div class="dropdown ms-auto">
+        <button class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person">Perfil</i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><span class="dropdown-item-text">{{ authService.user()?.email || 'Usuario' }}</span></li>
+          <li><button class="dropdown-item" type="button" (click)="logout()">Cerrar sesion</button></li>
+        </ul>
+    </div>
+
+<div class="offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="offcanvasWithBothOptions" aria-labelledby="offcanvasWithBothOptionsLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasWithBothOptionsLabel">Menú</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div>
+      <ul class="list-group list-group-flush">
+  <li class="list-group-item"><a routerLink="/transportistas">Transportistas</a></li>
+  <li class="list-group-item"><a routerLink="/clientes">Clientes</a></li>
+  <li class="list-group-item"><a routerLink="/pedidos">Pedidos</a></li>
+  <li class="list-group-item"><a routerLink="/viajes">Viajes</a></li>
+  <li class="list-group-item"><a routerLink="/facturacion">Facturacion</a></li>
+  <li class="list-group-item"><a routerLink="/cobrados">Cobrados</a></li>
+</ul>
+    </div>
+  </div>
+</div>
+</nav>

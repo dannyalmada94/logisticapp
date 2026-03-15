@@ -1,0 +1,97 @@
+<section class="p-3">
+  <h2>Facturación</h2>
+
+  <div *ngIf="errorMessage()" class="alert alert-danger" role="alert">
+    {{ errorMessage() }}
+  </div>
+
+  <div *ngIf="loading()" class="mb-2">
+    <small class="text-muted">Cargando datos…</small>
+  </div>
+
+  <div *ngIf="!loading()">
+    <div *ngIf="getFacturas().length; else empty">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>N.º Pedido</th>
+              <th>Cliente</th>
+              <th>Transporte</th>
+              <th>CTG</th>
+              <th>Toneladas</th>
+              <th>Tarifa</th>
+              <th>Valor Viaje</th>
+              <th>Comisión %</th>
+              <th>Pendiente a Cobrar</th>
+              <th>Fecha de Cobro</th>
+              <th>Cobro</th>
+              <th>Pago</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of getFacturas(); trackBy: trackByFactura">
+              <td>{{ f.numeroPedido }}</td>
+              <td>{{ f.clienteNombre }}</td>
+              <td>{{ f.transporteNombre }}</td>
+              <td>{{ f.ctg }}</td>
+              <td>{{ f.toneladas }}</td>
+              <td>{{ f.tarifa | number:'1.2-2' }}</td>
+              <td>{{ f.valorViaje | number:'1.2-2' }}</td>
+              <td>{{ f.comision }}%</td>
+              <td>{{ f.pendienteCobrar | number:'1.2-2' }}</td>
+              <td>
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="dd/mm/aaaa"
+                  maxlength="10"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  [value]="f.fechaCobro"
+                  (keydown)="onFechaCobroKeydown($event)"
+                  (input)="onFechaCobroInput($event)"
+                  (blur)="updateFechaCobro(f.pedidoId, f.transportistaId, $any($event.target).value)"
+                >
+              </td>
+              <td>
+                <select
+                  class="form-select form-select-sm"
+                  [value]="f.cobro"
+                  (change)="updateEstadoCobroPago(f.pedidoId, f.transportistaId, 'cobro', $any($event.target).value, f.pendienteCobrar)"
+                >
+                  <option value="NO">NO</option>
+                  <option value="SI">SI</option>
+                </select>
+              </td>
+              <td>
+                <select
+                  class="form-select form-select-sm"
+                  [value]="f.pago"
+                  (change)="updateEstadoCobroPago(f.pedidoId, f.transportistaId, 'pago', $any($event.target).value, f.pendienteCobrar)"
+                >
+                  <option value="NO">NO</option>
+                  <option value="SI">SI</option>
+                </select>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary"
+                  (click)="revertirAViajes(f.pedidoId, f.transportistaId)"
+                >
+                  Revertir a Viajes
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <ng-template #empty>
+      <p class="text-muted">No hay datos de facturación disponibles.</p>
+    </ng-template>
+  </div>
+</section>

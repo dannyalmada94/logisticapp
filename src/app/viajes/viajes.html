@@ -1,0 +1,146 @@
+<section class="p-3">
+  <h2>Pedidos Generados</h2>
+
+  <div *ngIf="errorMessage()" class="alert alert-danger" role="alert">
+    {{ errorMessage() }}
+  </div>
+
+  <div *ngIf="loading()" class="mb-2">
+    <small class="text-muted">Cargando pedidos…</small>
+  </div>
+
+  <div *ngIf="!loading()">
+    <div *ngIf="getPedidosActivos().length; else empty">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Número de Pedido</th>
+              <th>Cliente</th>
+              <th>Origen</th>
+              <th>Destino</th>
+              <th>Transportistas</th>
+              <th>Tarifa</th>
+              <th>Fecha de Creación</th>
+              <th>Acciones</th>
+              <th>Finalizado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of getPedidosActivos()">
+              <td>{{ p.data?.numeroPedido || 'N/A' }}</td>
+              <td>{{ getClienteNombre(p.data?.clienteId) }}</td>
+              <td>{{ p.data?.origen || 'N/A' }}</td>
+              <td>{{ p.data?.destino || 'N/A' }}</td>
+              <td>{{ getTransportistasNombres(p.data?.transportistaIds || []) }}</td>
+              <td>{{ p.data?.tarifa ?? 'N/A' }}</td>
+              <td>{{ formatDate(p.data?.createdAt) }}</td>
+              <td>
+                <div class="btn-group btn-group-sm" role="group" aria-label="acciones">
+                  <button class="btn btn-outline-secondary" (click)="startEdit(p)">✏️</button>
+                  <button class="btn btn-outline-danger" (click)="remove(p)">🗑️</button>
+                </div>
+              </td>
+              <td>
+                <select class="form-select form-select-sm" [value]="getFinalizadoValue(p)" (change)="onFinalizadoChange(p, $event)">
+                  <option value="NO">NO</option>
+                  <option value="SI">SI</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <ng-template #empty>
+      <p class="text-muted">No hay pedidos generados aún.</p>
+    </ng-template>
+  </div>
+
+  <!-- Modal para editar -->
+  <div *ngIf="showEditForm()" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Pedido</h5>
+          <button type="button" class="btn-close" (click)="cancelEdit()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
+            <div class="mb-3">
+              <label for="editClienteSelect" class="form-label">Cliente</label>
+              <select class="form-control" id="editClienteSelect" formControlName="clienteId">
+                <option *ngFor="let c of clientes()" [value]="c.id">{{ c.data?.nombre || 'N/A' }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="editOrigenSelect" class="form-label">Origen</label>
+              <select class="form-control" id="editOrigenSelect" formControlName="origen">
+                <option value="campo">Campo</option>
+                <option value="planta">Planta</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="editDestinoSelect" class="form-label">Destino</label>
+              <select class="form-control" id="editDestinoSelect" formControlName="destino">
+                <option value="planta">Planta</option>
+                <option value="consumo">Consumo</option>
+                <option value="puerto">Puerto</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Seleccionar Transportistas</label>
+              <small class="text-muted">Selecciona al menos 1 transportista.</small>
+              <div class="table-responsive mt-2">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Seleccionar</th>
+                      <th>Nombre Transporte</th>
+                      <th>Nombre Chofer</th>
+                      <th>Patente Chasis</th>
+                      <th>CTG</th>
+                      <th>Toneladas Descargadas</th>
+                      <th>Tarifa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let t of transportistas()">
+                      <td>
+                        <input type="checkbox" [checked]="isSelectedEdit(t.id)" (change)="toggleTransportistaEdit(t.id)">
+                      </td>
+                      <td>{{ t.data?.nombreTransporte || 'N/A' }}</td>
+                      <td>{{ t.data?.nombreChofer || 'N/A' }}</td>
+                      <td>{{ t.data?.patenteChasis || 'N/A' }}</td>
+                      <td>
+                        <input type="number" class="form-control" [disabled]="!isSelectedEdit(t.id)" [value]="getCtgForTransportista(t.id)" (input)="setCtgForTransportista(t.id, $event)">
+                      </td>
+                      <td>
+                        <input type="number" step="0.01" class="form-control" [disabled]="!isSelectedEdit(t.id)" [value]="getToneladasForTransportista(t.id)" (input)="setToneladasForTransportista(t.id, $event)">
+                      </td>
+                      <td>
+                        <input type="number" step="0.01" class="form-control" [disabled]="!isSelectedEdit(t.id)" [value]="getTarifaForTransportista(t.id)" (input)="setTarifaForTransportista(t.id, $event)">
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="selectedTransportistasEdit().length === 0" class="text-warning">
+                Debes seleccionar al menos 1 transportista.
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid || selectedTransportistasEdit().length === 0">Guardar Cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

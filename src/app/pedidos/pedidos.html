@@ -1,0 +1,102 @@
+<section class="p-3">
+  <h2>Generar Pedido</h2>
+
+  <div *ngIf="errorMessage()" class="alert alert-danger" role="alert">
+    {{ errorMessage() }}
+  </div>
+
+  <div *ngIf="loading()" class="mb-2">
+    <small class="text-muted">Cargando datos…</small>
+  </div>
+
+  <div *ngIf="!loading()">
+    <form [formGroup]="pedidoForm" (ngSubmit)="generarPedido()">
+      <div class="mb-3">
+        <label for="clienteSelect" class="form-label">Seleccionar Cliente</label>
+        <select class="form-control" id="clienteSelect" formControlName="clienteId">
+          <option value="">-- Seleccionar Cliente --</option>
+          <option *ngFor="let c of clientes()" [value]="c.id">{{ c.data?.nombre || 'N/A' }}</option>
+        </select>
+        <div *ngIf="pedidoForm.get('clienteId')?.invalid && pedidoForm.get('clienteId')?.touched" class="text-danger">
+          Cliente requerido.
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="origenSelect" class="form-label">Origen</label>
+        <select class="form-control" id="origenSelect" formControlName="origen">
+          <option value="">-- Seleccionar Origen --</option>
+          <option value="campo">Campo</option>
+          <option value="planta">Planta</option>
+        </select>
+        <div *ngIf="pedidoForm.get('origen')?.invalid && pedidoForm.get('origen')?.touched" class="text-danger">
+          Origen requerido.
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="destinoSelect" class="form-label">Destino</label>
+        <select class="form-control" id="destinoSelect" formControlName="destino">
+          <option value="">-- Seleccionar Destino --</option>
+          <option value="planta">Planta</option>
+          <option value="consumo">Consumo</option>
+          <option value="puerto">Puerto</option>
+        </select>
+        <div *ngIf="pedidoForm.get('destino')?.invalid && pedidoForm.get('destino')?.touched" class="text-danger">
+          Destino requerido.
+        </div>
+      </div>
+      
+        <div class="mb-3">
+          <label for="tarifaInput" class="form-label">Tarifa</label>
+          <input type="number" class="form-control" id="tarifaInput" formControlName="tarifa" min="0" step="0.01">
+          <div *ngIf="pedidoForm.get('tarifa')?.invalid && pedidoForm.get('tarifa')?.touched" class="text-danger">
+            Tarifa requerida.
+          </div>
+        </div>
+
+      <div class="mb-3">
+        <label class="form-label">Seleccionar Transportistas</label>
+        <small class="text-muted">Selecciona al menos 1 transportista para el pedido.</small>
+        <div class="mb-2">
+          <input type="text" class="form-control" placeholder="Buscar transportistas por nombre, chofer o patente..." (input)="onSearchChange($event)">
+        </div>
+        <div class="table-responsive mt-2">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Seleccionar</th>
+                <th>Nombre Transporte</th>
+                <th>CUIT Transporte</th>
+                <th>Nombre Chofer</th>
+                <th>CUIT Chofer</th>
+                <th>Patente Chasis</th>
+                <th>Patente Acoplado</th>
+                <th>Tipo Camión</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of filteredTransportistas">
+                <td>
+                  <input type="checkbox" [checked]="isSelected(t.id)" (change)="toggleTransportista(t.id)">
+                </td>
+                <td>{{ t.data?.nombreTransporte || 'N/A' }}</td>
+                <td>{{ t.data?.cuitTransporte || 'N/A' }}</td>
+                <td>{{ t.data?.nombreChofer || 'N/A' }}</td>
+                <td>{{ t.data?.cuitChofer || 'N/A' }}</td>
+                <td>{{ t.data?.patenteChasis || 'N/A' }}</td>
+                <td>{{ t.data?.patenteAcoplado || 'N/A' }}</td>
+                <td>{{ t.data?.tipoCamion || 'N/A' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div *ngIf="selectedTransportistas().length === 0" class="text-warning">
+          Debes seleccionar al menos 1 transportista. Seleccionados: {{ selectedTransportistas().length }}
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-success" [disabled]="pedidoForm.invalid || selectedTransportistas().length === 0">Generar Pedido</button>
+    </form>
+  </div>
+</section>

@@ -1,0 +1,160 @@
+<section class="p-3">
+  <button class="btn btn-primary mb-3" (click)="toggleAddForm()">
+    {{ showAddForm() ? 'Cancelar' : 'Agregar cliente' }}
+  </button>
+
+  <div *ngIf="showAddForm()" class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Nuevo Cliente</h5>
+      <form [formGroup]="addForm" (ngSubmit)="addNew()">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="addNombre" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="addNombre" formControlName="nombre">
+            <div *ngIf="addForm.get('nombre')?.invalid && addForm.get('nombre')?.touched" class="text-danger">
+              Nombre requerido.
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="addCuit" class="form-label">CUIT</label>
+            <input type="text" class="form-control" id="addCuit" formControlName="cuit">
+            <div *ngIf="addForm.get('cuit')?.invalid && addForm.get('cuit')?.touched" class="text-danger">
+              CUIT numérico requerido.
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="addTelefono" class="form-label">Teléfono</label>
+            <input type="text" class="form-control" id="addTelefono" formControlName="telefono">
+            <div *ngIf="addForm.get('telefono')?.invalid && addForm.get('telefono')?.touched" class="text-danger">
+              Teléfono numérico requerido.
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="addEmail" class="form-label">E-mail</label>
+            <input type="email" class="form-control" id="addEmail" formControlName="email">
+            <div *ngIf="addForm.get('email')?.invalid && addForm.get('email')?.touched" class="text-danger">
+              E-mail válido requerido.
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success" [disabled]="addForm.invalid">Guardar</button>
+      </form>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage()" class="alert alert-danger" role="alert">
+    {{ errorMessage() }}
+  </div>
+
+  <div class="mb-3">
+    <input type="text" class="form-control" placeholder="Buscar por nombre o e-mail..." (input)="onSearchChange($event)">
+  </div>
+
+  <div *ngIf="loading()" class="mb-2">
+    <small class="text-muted">Cargando clientes…</small>
+  </div>
+
+  <div *ngIf="!loading()">
+    <div *ngIf="paginatedClientes.length; else empty">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>CUIT</th>
+              <th>Teléfono</th>
+              <th>E-mail</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of paginatedClientes">
+              <td>{{ c.data?.nombre || 'N/A' }}</td>
+              <td>{{ c.data?.cuit || 'N/A' }}</td>
+              <td>{{ c.data?.telefono || 'N/A' }}</td>
+              <td>{{ c.data?.email || 'N/A' }}</td>
+              <td>
+                <div class="btn-group btn-group-sm" role="group" aria-label="acciones">
+                  <button class="btn btn-outline-secondary" (click)="startEdit(c)">✏️</button>
+                  <button class="btn btn-outline-danger" (click)="remove(c)">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav *ngIf="totalPages > 1" aria-label="Paginación">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="currentPage() === 1">
+            <a class="page-link" href="#" (click)="changePage(currentPage() - 1); $event.preventDefault()">Anterior</a>
+          </li>
+          <li class="page-item" *ngFor="let page of [].constructor(totalPages); let i = index" [class.active]="currentPage() === i + 1">
+            <a class="page-link" href="#" (click)="changePage(i + 1); $event.preventDefault()">{{ i + 1 }}</a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage() === totalPages">
+            <a class="page-link" href="#" (click)="changePage(currentPage() + 1); $event.preventDefault()">Siguiente</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <ng-template #empty>
+      <p class="text-muted">No hay clientes registrados aún.</p>
+    </ng-template>
+  </div>
+
+  <!-- Modal para editar -->
+  <div *ngIf="showEditForm()" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Cliente</h5>
+          <button type="button" class="btn-close" (click)="cancelEdit()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="editNombre" class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="editNombre" formControlName="nombre">
+                <div *ngIf="editForm.get('nombre')?.invalid && editForm.get('nombre')?.touched" class="text-danger">
+                  Nombre requerido.
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="editCuit" class="form-label">CUIT</label>
+                <input type="text" class="form-control" id="editCuit" formControlName="cuit">
+                <div *ngIf="editForm.get('cuit')?.invalid && editForm.get('cuit')?.touched" class="text-danger">
+                  CUIT numérico requerido.
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="editTelefono" class="form-label">Teléfono</label>
+                <input type="text" class="form-control" id="editTelefono" formControlName="telefono">
+                <div *ngIf="editForm.get('telefono')?.invalid && editForm.get('telefono')?.touched" class="text-danger">
+                  Teléfono numérico requerido.
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="editEmail" class="form-label">E-mail</label>
+                <input type="email" class="form-control" id="editEmail" formControlName="email">
+                <div *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched" class="text-danger">
+                  E-mail válido requerido.
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid">Guardar Cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

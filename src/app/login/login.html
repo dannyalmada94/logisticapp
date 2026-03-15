@@ -1,0 +1,33 @@
+<section class="container py-5" style="max-width: 480px;">
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <h2 class="h4 mb-3">Iniciar Sesion</h2>
+
+      <div *ngIf="errorMessage()" class="alert alert-danger" role="alert">
+        {{ errorMessage() }}
+      </div>
+
+      <form [formGroup]="authForm" (ngSubmit)="submit()">
+        <div class="mb-3">
+          <label class="form-label" for="email">Email</label>
+          <input id="email" type="email" class="form-control" formControlName="email" autocomplete="email" />
+          <small class="text-danger" *ngIf="authForm.get('email')?.invalid && authForm.get('email')?.touched">
+            Ingresa un email valido.
+          </small>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="password">Contrasena</label>
+          <input id="password" type="password" class="form-control" formControlName="password" autocomplete="current-password" />
+          <small class="text-danger" *ngIf="authForm.get('password')?.invalid && authForm.get('password')?.touched">
+            La contrasena debe tener al menos 6 caracteres.
+          </small>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100" [disabled]="loading()">
+          {{ loading() ? 'Procesando...' : 'Ingresar' }}
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
