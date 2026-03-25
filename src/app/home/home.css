@@ -1,0 +1,46 @@
+.home-cards {
+	padding-top: 1rem;
+	padding-bottom: 0.5rem;
+}
+
+.home-cards .card {
+	background: rgba(255, 255, 255, 0.40);
+	border: 1px solid rgba(255, 255, 255, 0.38);
+	box-shadow: 0 10px 22px rgba(9, 23, 39, 0.2);
+	backdrop-filter: blur(2px);
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.home-cards .card:hover {
+	transform: scale(1.05);
+	box-shadow: 0 15px 30px rgba(9, 23, 39, 0.3);
+}
+
+.home-cards .card-icon {
+	cursor: pointer;
+	transition: opacity 0.2s ease;
+}
+
+.home-cards .card-icon:hover {
+	opacity: 0.8;
+}
+
+.home-cards .card-body,
+.home-cards .card-footer {
+	text-align: center;
+}
+
+.home-cards .card-title {
+	font-weight: 700;
+}
+
+.home-cards .card-text {
+	margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+	/* Si la última fila tiene 1 card, se ubica en la columna central */
+	.home-cards .row > .col:last-child:nth-child(3n + 1) {
+		margin-left: 33.333333%;
+	}
+}

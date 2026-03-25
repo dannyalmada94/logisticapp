@@ -1,37 +1,68 @@
-<nav class="navbar bg-body-tertiary" *ngIf="authService.isAuthenticated()">
-    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions">Menú</button>
-
-    <div class="mx-auto">
-        <button class="btn" routerLink="/home">
-            <i class="bi bi-house">Home</i>
-        </button>
+<nav class="navbar fixed-top app-header" *ngIf="authService.isAuthenticated()">
+  <div class="container-fluid header-layout">
+    <div class="header-left">
+      <button class="btn header-action-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions">
+        <i class="bi bi-list"></i>
+      </button>
     </div>
 
-    <div class="dropdown ms-auto">
-        <button class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-person">Perfil</i>
+    <div class="header-center">
+      <button class="btn header-action-btn" routerLink="/home">
+        <i class="bi bi-house"></i>
+      </button>
+    </div>
+
+    <div class="header-right">
+      <div class="dropdown">
+        <button class="btn dropdown-toggle header-action-btn" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-person"></i> Perfil
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
           <li><span class="dropdown-item-text">{{ authService.user()?.email || 'Usuario' }}</span></li>
-          <li><button class="dropdown-item" type="button" (click)="logout()">Cerrar sesion</button></li>
+          <li><button class="dropdown-item" type="button" (click)="logout()">Cerrar sesión</button></li>
         </ul>
+      </div>
     </div>
-
+  </div>
 <div class="offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="offcanvasWithBothOptions" aria-labelledby="offcanvasWithBothOptionsLabel">
   <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="offcanvasWithBothOptionsLabel">Menú</h5>
+    <h5 class="offcanvas-title" id="offcanvasWithBothOptionsLabel">Gestiones</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body">
     <div>
       <ul class="list-group list-group-flush">
-  <li class="list-group-item"><a routerLink="/transportistas">Transportistas</a></li>
-  <li class="list-group-item"><a routerLink="/clientes">Clientes</a></li>
-  <li class="list-group-item"><a routerLink="/pedidos">Pedidos</a></li>
-  <li class="list-group-item"><a routerLink="/viajes">Viajes</a></li>
-  <li class="list-group-item"><a routerLink="/facturacion">Facturacion</a></li>
-  <li class="list-group-item"><a routerLink="/cobrados">Cobrados</a></li>
-</ul>
+        <li class="list-group-item">
+          <button class="btn d-flex align-items-center gap-2 w-100 text-start" routerLink="/transportistas" (click)="closeOffcanvas()">
+            <i class="bi bi-truck"></i> Transportistas
+          </button>
+        </li>
+        <li class="list-group-item">
+          <button class="btn d-flex align-items-center gap-2 w-100 text-start" routerLink="/clientes" (click)="closeOffcanvas()">
+            <i class="bi bi-person-check"></i> Clientes
+          </button>
+        </li>
+        <li class="list-group-item">
+          <button class="btn d-flex align-items-center gap-2 w-100 text-start" routerLink="/pedidos" (click)="closeOffcanvas()">
+            <i class="bi bi-send"></i> Pedidos
+          </button>
+        </li>
+        <li class="list-group-item">
+          <button class="btn d-flex align-items-center gap-2 w-100 text-start" routerLink="/viajes" (click)="closeOffcanvas()">
+            <i class="bi bi-pin-map"></i> Viajes
+          </button>
+        </li>
+        <li class="list-group-item">
+          <button class="btn d-flex align-items-center gap-2 w-100 text-start" routerLink="/facturacion" (click)="closeOffcanvas()">
+            <i class="bi bi-receipt"></i> Facturación
+          </button>
+        </li>
+        <li class="list-group-item">
+          <button class="btn d-flex align-items-center gap-2 w-100 text-start" routerLink="/cobrados" (click)="closeOffcanvas()">
+            <i class="bi bi-cash-stack"></i> Cobrados
+          </button>
+        </li>
+      </ul>
     </div>
   </div>
 </div>

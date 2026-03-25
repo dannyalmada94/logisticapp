@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router } from '@angular/router';
 import { Header } from './header/header';
 import { Content } from './content/content';
 import { Footer } from './footer/footer';
@@ -15,10 +15,16 @@ if (typeof window !== 'undefined' && typeof window.document !== 'undefined') {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Content, Footer],
+  imports: [Header, Content, Footer],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App {
   protected readonly title = signal('logisticapp');
+
+  constructor(private readonly router: Router) {}
+
+  showFooter(): boolean {
+    return !this.router.url.startsWith('/login');
+  }
 }

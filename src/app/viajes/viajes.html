@@ -1,5 +1,11 @@
-<section class="p-3">
-  <h2>Pedidos Generados</h2>
+<section class="viajes-section p-3">
+  <div class="mb-2">
+    <a routerLink="/home" class="back-link">
+      <i class="bi bi-chevron-left"></i>
+    </a>
+  </div>
+  <img src="/ViajesEHP.png" alt="Logo Viajes" class="viajes-logo" />
+  <h2 class="viajes-title">Pedidos Generados</h2>
 
   <div *ngIf="errorMessage()" class="alert alert-danger" role="alert">
     {{ errorMessage() }}
@@ -10,68 +16,93 @@
   </div>
 
   <div *ngIf="!loading()">
-    <div *ngIf="getPedidosActivos().length; else empty">
-      <div class="table-responsive">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>Número de Pedido</th>
-              <th>Cliente</th>
-              <th>Origen</th>
-              <th>Destino</th>
-              <th>Transportistas</th>
-              <th>Tarifa</th>
-              <th>Fecha de Creación</th>
-              <th>Acciones</th>
-              <th>Finalizado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let p of getPedidosActivos()">
-              <td>{{ p.data?.numeroPedido || 'N/A' }}</td>
-              <td>{{ getClienteNombre(p.data?.clienteId) }}</td>
-              <td>{{ p.data?.origen || 'N/A' }}</td>
-              <td>{{ p.data?.destino || 'N/A' }}</td>
-              <td>{{ getTransportistasNombres(p.data?.transportistaIds || []) }}</td>
-              <td>{{ p.data?.tarifa ?? 'N/A' }}</td>
-              <td>{{ formatDate(p.data?.createdAt) }}</td>
-              <td>
-                <div class="btn-group btn-group-sm" role="group" aria-label="acciones">
-                  <button class="btn btn-outline-secondary" (click)="startEdit(p)">✏️</button>
-                  <button class="btn btn-outline-danger" (click)="remove(p)">🗑️</button>
-                </div>
-              </td>
-              <td>
-                <select class="form-select form-select-sm" [value]="getFinalizadoValue(p)" (change)="onFinalizadoChange(p, $event)">
-                  <option value="NO">NO</option>
-                  <option value="SI">SI</option>
-                </select>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <div class="viajes-card">
+      <div class="viajes-card-header">Listado de Pedidos</div>
+      <div class="viajes-card-body">
+        <div *ngIf="getPedidosActivos().length; else empty">
+          <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th>Número de Pedido</th>
+                  <th>Cliente</th>
+                  <th>Rubro</th>
+                  <th>Producto</th>
+                  <th>Origen</th>
+                  <th>Destino</th>
+                  <th>Transportistas</th>
+                  <th>Tarifa</th>
+                  <th>Fecha de Creación</th>
+                  <th>Acciones</th>
+                  <th>Finalizado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of getPedidosActivos()">
+                  <td>{{ p.data?.numeroPedido || 'N/A' }}</td>
+                  <td>{{ getClienteNombre(p.data?.clienteId) }}</td>
+                  <td>{{ p.data?.rubro ? (p.data.rubro | titlecase) : 'N/A' }}</td>
+                  <td>{{ p.data?.producto ? (p.data.producto | titlecase) : 'N/A' }}</td>
+                  <td>{{ p.data?.origen || 'N/A' }}</td>
+                  <td>{{ p.data?.destino || 'N/A' }}</td>
+                  <td>{{ getTransportistasNombres(p.data?.transportistaIds || []) }}</td>
+                  <td>{{ p.data?.tarifa ?? 'N/A' }}</td>
+                  <td>{{ formatDate(p.data?.createdAt) }}</td>
+                  <td>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="acciones">
+                      <button class="btn btn-outline-secondary" (click)="startEdit(p)">✏️</button>
+                      <button class="btn btn-outline-danger" (click)="remove(p)">🗑️</button>
+                    </div>
+                  </td>
+                  <td>
+                    <select class="form-select form-select-sm" [value]="getFinalizadoValue(p)" (change)="onFinalizadoChange(p, $event)">
+                      <option value="NO">NO</option>
+                      <option value="SI">SI</option>
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
     <ng-template #empty>
-      <p class="text-muted">No hay pedidos generados aún.</p>
+      <p class="text-muted mb-0">No hay pedidos generados aún.</p>
     </ng-template>
   </div>
 
   <!-- Modal para editar -->
   <div *ngIf="showEditForm()" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
     <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
+      <div class="modal-content viajes-modal-content">
+        <div class="modal-header viajes-modal-header">
           <h5 class="modal-title">Editar Pedido</h5>
           <button type="button" class="btn-close" (click)="cancelEdit()"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body viajes-modal-body">
           <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
             <div class="mb-3">
               <label for="editClienteSelect" class="form-label">Cliente</label>
-              <select class="form-control" id="editClienteSelect" formControlName="clienteId">
+              <select class="form-control" id="editClienteSelect" formControlName="clienteId" (change)="onEditClienteChange($event)">
                 <option *ngFor="let c of clientes()" [value]="c.id">{{ c.data?.nombre || 'N/A' }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="editRubroSelect" class="form-label">Rubro</label>
+              <select class="form-control" id="editRubroSelect" formControlName="rubro" (change)="onEditRubroChange($event)">
+                <option value="">-- Seleccionar rubro --</option>
+                <option *ngFor="let rubro of rubrosClienteEditSeleccionado" [value]="rubro">{{ rubro | titlecase }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="editProductoSelect" class="form-label">Producto</label>
+              <select class="form-control" id="editProductoSelect" formControlName="producto">
+                <option value="">-- Seleccionar producto --</option>
+                <option *ngFor="let producto of productosRubroEditSeleccionado" [value]="producto">{{ producto | titlecase }}</option>
               </select>
             </div>
 
@@ -95,9 +126,9 @@
             <div class="mb-3">
               <label class="form-label">Seleccionar Transportistas</label>
               <small class="text-muted">Selecciona al menos 1 transportista.</small>
-              <div class="table-responsive mt-2">
-                <table class="table table-striped">
-                  <thead>
+              <div class="table-responsive mt-2 viajes-modal-table-wrap">
+                <table class="table table-hover table-sm align-middle mb-0">
+                  <thead class="table-dark">
                     <tr>
                       <th>Seleccionar</th>
                       <th>Nombre Transporte</th>
@@ -134,7 +165,7 @@
               </div>
             </div>
 
-            <div class="modal-footer">
+            <div class="modal-footer viajes-modal-footer">
               <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancelar</button>
               <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid || selectedTransportistasEdit().length === 0">Guardar Cambios</button>
             </div>

@@ -1,80 +1,67 @@
-<div class="row row-cols-1 row-cols-md-3 g-4">
-  <div class="col">
-    <div class="card h-100">
-      <img src="..." class="card-img-top" alt="...">
-      <div class="card-body">
-        <h5 class="card-title">Transportistas</h5>
-        <p class="card-text">Información sobre todos los transportistas</p>
-      </div>
-      <div class="card-footer">
-        <small class="text-body-secondary">
-            <a routerLink="/transportistas">Ingresar</a></small>
+<div class="home-cards">
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="col">
+      <div class="card h-100">
+        <img src="/TransportistasEHP.png" class="card-img-top card-icon" alt="Transportistas" (click)="navigateTo('/transportistas')">
+        <div class="card-body">
+          <h5 class="card-title">Transportistas</h5>
+          <p class="card-text">Información sobre todos los transportistas</p>
+        </div>
       </div>
     </div>
-  </div>
   <div class="col">
     <div class="card h-100">
-      <img src="..." class="card-img-top" alt="...">
+      <img src="/ClientesEHP.png" class="card-img-top card-icon" alt="Clientes" (click)="navigateTo('/clientes')">
       <div class="card-body">
         <h5 class="card-title">Clientes</h5>
         <p class="card-text">Información sobre todos los clientes</p>
       </div>
-      <div class="card-footer">
-        <small class="text-body-secondary">
-            <a routerLink="/clientes">Ingresar</a></small>
-      </div>
     </div>
   </div>
   <div class="col">
     <div class="card h-100">
-      <img src="..." class="card-img-top" alt="...">
+      <img src="/PedidosEHP.png" class="card-img-top card-icon" alt="Generar Pedido" (click)="navigateTo('/pedidos')">
       <div class="card-body">
-        <h5 class="card-title">Generar pedido</h5>
-        <p class="card-text">En esta sección vas a poder cargar el pedido para enviar al cliente correspondiente</p>
-      </div>
-      <div class="card-footer">
-        <small class="text-body-secondary">
-            <a routerLink="/pedidos">Ingresar</a></small>
+        <h5 class="card-title">Generar Pedido</h5>
+        <p class="card-text">En esta sección podrás cargar el pedido para enviarlo al cliente correspondiente.</p>
       </div>
     </div>
   </div>
     <div class="col">
     <div class="card h-100">
-      <img src="..." class="card-img-top" alt="...">
+      <img src="/ViajesEHP.png" class="card-img-top card-icon" alt="Viajes" (click)="navigateTo('/viajes')">
       <div class="card-body">
         <h5 class="card-title">Viajes</h5>
-        <p class="card-text">En esta sección podrás ver los pedidos generados</p>
-      </div>
-      <div class="card-footer">
-        <small class="text-body-secondary">
-            <a routerLink="/viajes">Ingresar</a></small>
+        <p class="card-text">En esta sección podrás ver los pedidos generados.</p>
       </div>
     </div>
   </div>
       <div class="col">
     <div class="card h-100">
-      <img src="..." class="card-img-top" alt="...">
+      <img src="/FacturacionEHP.png" class="card-img-top card-icon" alt="Facturación" (click)="navigateTo('/facturacion')">
       <div class="card-body">
         <h5 class="card-title">Facturación</h5>
-        <p class="card-text">EInformación sobre la facturación de los pedidos</p>
-      </div>
-      <div class="card-footer">
-        <small class="text-body-secondary">
-            <a routerLink="/facturacion">Ingresar</a></small>
+        <p class="card-text">Información sobre la facturación de los pedidos.</p>
       </div>
     </div>
   </div>
-  <div class="col">
-    <div class="card h-100">
-      <img src="..." class="card-img-top" alt="...">
-      <div class="card-body">
-        <h5 class="card-title">Cobrados</h5>
-        <p class="card-text">Información sobre los pagos cobrados</p>
-      </div>
-      <div class="card-footer">
-        <small class="text-body-secondary">
-            <a routerLink="/cobrados">Ingresar</a></small>
+    <div class="col">
+      <div class="card h-100">
+        <img src="/CobradosEHP.png" class="card-img-top card-icon" alt="Cobrados" (click)="navigateTo('/cobrados')">
+        <div class="card-body">
+          <h5 class="card-title">Cobrados</h5>
+          <p class="card-text">Información sobre los pagos cobrados.</p>
+        </div>
       </div>
     </div>
+      <div class="col">
+    <div class="card h-100">
+      <img src="/MetricasEHP.png" class="card-img-top card-icon" alt="Métricas" (click)="navigateTo('/metricas')">
+      <div class="card-body">
+        <h5 class="card-title">Métricas</h5>
+        <p class="card-text">Información sobre las métricas de desempeño.</p>
+      </div>
+    </div>
+  </div>
   </div>
 </div>

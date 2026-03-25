@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RealtimeDatabaseService } from '../services/realtime-db.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-facturacion',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './facturacion.html',
   styleUrl: './facturacion.css',
 })
@@ -308,6 +309,8 @@ export class Facturacion implements OnInit, OnDestroy {
           transportistaId,
           numeroPedido,
           clienteNombre,
+          rubro: pedido.data?.rubro ?? 'N/A',
+          producto: pedido.data?.producto ?? 'N/A',
           transporteNombre: transportistaData?.nombreTransporte || 'N/A',
           ctg: ctg ?? 'N/A',
           toneladas: toneladas ?? 'N/A',

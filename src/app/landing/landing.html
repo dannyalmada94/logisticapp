@@ -1,0 +1,80 @@
+<section class="landing-page">
+
+	<div class="landing-overlay"></div>
+
+	<div class="landing-content">
+		<img src="/LogoGrandeEHP.png" alt="EHP Logística" class="landing-brand-logo" />
+		<p class="landing-kicker">EHP Logística</p>
+		<p class="landing-subtitle">
+			Centraliza pedidos, viajes, facturación y cobranzas en una sola plataforma,
+			con seguimiento operativo en tiempo real.
+		</p>
+
+		<div class="landing-actions">
+			<a class="btn btn-light landing-btn" routerLink="/login">Ingresar</a>
+			<button
+				type="button"
+				class="btn btn-outline-light landing-btn"
+				data-bs-toggle="modal"
+				data-bs-target="#trabajarModal"
+			>
+				Quiero trabajar
+			</button>
+		</div>
+	</div>
+
+</section>
+
+
+<div class="modal fade" id="trabajarModal" tabindex="-1" aria-labelledby="trabajarModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<form (submit)="submitTrabajo($event)">
+				<div class="modal-header">
+					<h5 class="modal-title" id="trabajarModalLabel">Formulario de contacto</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+
+				<div class="modal-body">
+					<div class="mb-3">
+						<label for="nombreApellido" class="form-label">Nombre y Apellido</label>
+						<input id="nombreApellido" name="Nombre y Apellido" type="text" class="form-control" />
+					</div>
+
+					<div class="mb-3">
+						<label for="nombreTransporte" class="form-label">Nombre del transporte</label>
+						<input id="nombreTransporte" name="Nombre del transporte" type="text" class="form-control" />
+					</div>
+
+					<div class="mb-3">
+						<label for="rubro" class="form-label">Rubro</label>
+						<select id="rubro" name="Rubro" class="form-select">
+							<option value="">Seleccionar</option>
+							<option value="Agrícola">Agrícola</option>
+							<option value="Áridos">Áridos</option>
+							<option value="Otros">Otros</option>
+						</select>
+					</div>
+
+					<div class="mb-3">
+						<label for="telefono" class="form-label">Número de teléfono</label>
+						<input id="telefono" name="Número de teléfono" type="tel" class="form-control" required />
+						<div class="form-text">Este campo es obligatorio.</div>
+					</div>
+
+					<div class="mb-1">
+						<label for="mail" class="form-label">Mail</label>
+						<input id="mail" name="Mail" type="email" class="form-control" />
+					</div>
+				</div>
+
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+					<button type="submit" class="btn btn-primary">Enviar</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+

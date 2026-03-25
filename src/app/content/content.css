@@ -1,0 +1,13 @@
+:host {
+	display: block;
+}
+
+.content-viewport {
+	/* Evita que el footer suba cuando hay poco contenido */
+	min-height: calc(100dvh - 180px);
+}
+
+.content-inner {
+	padding-top: 0;
+	padding-bottom: 0;
+}

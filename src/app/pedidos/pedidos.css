@@ -1,0 +1,35 @@
+.pedidos-section {
+	padding: 1.25rem 0.5rem;
+}
+
+.pedidos-logo {
+	display: block;
+	width: min(180px, 72vw);
+	height: auto;
+	margin: 0 auto 0.6rem;
+	filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.28));
+}
+
+.pedidos-title {
+	text-align: center;
+	font-weight: 700;
+	margin-bottom: 1.5rem;
+	color: #f8fafc;
+	text-shadow: 0 1px 4px rgba(0,0,0,0.45);
+}
+
+.pedidos-card {
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(2px);
+	border-radius: 12px;
+	box-shadow: 0 2px 12px rgba(9, 23, 39, 0.18);
+}
+
+.pedidos-card-header {
+	background: rgba(9, 23, 39, 0.88);
+	color: #f8fafc;
+	font-weight: 600;
+	border-radius: 11px 11px 0 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}

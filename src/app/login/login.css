@@ -1,3 +1,63 @@
 :host {
   display: block;
 }
+
+.login-page {
+  position: relative;
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background-image: url('/TrigoEHP3.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+.login-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.45)),
+    radial-gradient(circle at 80% 15%, rgba(245, 158, 11, 0.35), transparent 55%);
+    
+}
+
+.login-card-wrapper {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 460px);
+}
+
+.login-card {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.40);
+  backdrop-filter: blur(3px);
+  border-radius: 16px;
+}
+
+.login-logo {
+  display: block;
+  max-height: 72px;
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.login-submit-btn {
+  min-height: 44px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    min-height: 100dvh;
+    padding: 1rem;
+  }
+}

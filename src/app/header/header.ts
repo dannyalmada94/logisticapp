@@ -13,8 +13,16 @@ import { NgIf } from '@angular/common';
 export class Header {
   constructor(public authService: AuthService, private readonly router: Router) {}
 
+  closeOffcanvas() {
+    const el = document.getElementById('offcanvasWithBothOptions');
+    if (el) {
+      const bootstrap = (window as any)['bootstrap'];
+      bootstrap?.Offcanvas?.getInstance(el)?.hide();
+    }
+  }
+
   async logout() {
     await this.authService.logout();
-    await this.router.navigate(['/login']);
+    await this.router.navigate(['/landing']);
   }
 }
