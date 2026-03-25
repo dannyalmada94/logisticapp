@@ -1,0 +1,44 @@
+.cobrados-section {
+	max-width: 1280px;
+	margin: 0 auto;
+}
+
+.cobrados-logo {
+	display: block;
+	width: min(180px, 72vw);
+	height: auto;
+	margin: 0 auto 0.6rem;
+	filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.28));
+}
+
+.cobrados-title {
+	text-align: center;
+	font-weight: 700;
+	margin-bottom: 1.5rem;
+	color: #f8fafc;
+	text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.cobrados-card {
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	background: rgba(255, 255, 255, 0.92);
+	border-radius: 12px;
+	box-shadow: 0 2px 12px rgba(9, 23, 39, 0.18);
+	overflow: hidden;
+}
+
+.cobrados-card-header {
+	background: rgba(9, 23, 39, 0.88);
+	color: #f8fafc;
+	font-weight: 600;
+	padding: 0.85rem 1rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.cobrados-card-body {
+	padding: 1rem;
+}
+
+.table-responsive {
+	border-radius: 10px;
+}

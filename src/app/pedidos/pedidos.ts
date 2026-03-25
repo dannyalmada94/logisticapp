@@ -4,11 +4,12 @@ import { RealtimeDatabaseService } from '../services/realtime-db.service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-pedidos',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './pedidos.html',
   styleUrl: './pedidos.css',
 })
@@ -25,12 +26,14 @@ export class Pedidos implements OnInit, OnDestroy {
 
   get filteredTransportistas() {
     const term = this.searchTerm().toLowerCase();
-    return this.transportistas().filter(t =>
-      t.data?.nombreTransporte?.toLowerCase().includes(term) ||
-      t.data?.nombreChofer?.toLowerCase().includes(term) ||
-      t.data?.patenteChasis?.toLowerCase().includes(term) ||
-      t.data?.patenteAcoplado?.toLowerCase().includes(term)
-    );
+    return this.transportistas()
+      .filter(t =>
+        t.data?.nombreTransporte?.toLowerCase().includes(term) ||
+        t.data?.nombreChofer?.toLowerCase().includes(term) ||
+        t.data?.patenteChasis?.toLowerCase().includes(term) ||
+        t.data?.patenteAcoplado?.toLowerCase().includes(term)
+      )
+      .slice(0, 6);
   }
 
   private unsubscribeClientes?: () => void;
@@ -40,10 +43,53 @@ export class Pedidos implements OnInit, OnDestroy {
   constructor(private readonly db: RealtimeDatabaseService, private fb: FormBuilder) {
     this.pedidoForm = this.fb.group({
       clienteId: ['', Validators.required],
+      rubro: ['', Validators.required],
+      producto: ['', Validators.required],
       origen: ['', Validators.required],
       destino: ['', Validators.required],
       tarifa: [0, [Validators.required, Validators.min(0)]],
     });
+  }
+
+  get clienteSeleccionado() {
+    const clienteId = this.pedidoForm.get('clienteId')?.value;
+    return this.clientes().find(c => c.id === clienteId) ?? null;
+  }
+
+  get rubrosDelClienteSeleccionado() {
+    const cliente = this.clienteSeleccionado;
+    if (!cliente) {
+      return [] as string[];
+    }
+
+    const rubros = Array.isArray(cliente.data?.rubros)
+      ? cliente.data.rubros
+      : (typeof cliente.data?.rubro === 'string' ? [cliente.data.rubro] : []);
+
+    return rubros.map((r: unknown) => String(r));
+  }
+
+  get productosDelRubroSeleccionado() {
+    const cliente = this.clienteSeleccionado;
+    const rubro = this.pedidoForm.get('rubro')?.value as string;
+
+    if (!cliente || !rubro) {
+      return [] as string[];
+    }
+
+    const byRubro = cliente.data?.subcategoriasByRubro;
+    if (byRubro && typeof byRubro === 'object' && Array.isArray(byRubro[rubro])) {
+      return byRubro[rubro].map((s: unknown) => String(s));
+    }
+
+    if (Array.isArray(cliente.data?.subcategorias)) {
+      const rubros = this.rubrosDelClienteSeleccionado;
+      if (rubros.length === 1 && rubros[0] === rubro) {
+        return cliente.data.subcategorias.map((s: unknown) => String(s));
+      }
+    }
+
+    return [] as string[];
   }
 
   ngOnInit() {
@@ -114,6 +160,23 @@ export class Pedidos implements OnInit, OnDestroy {
     this.searchTerm.set(target.value);
   }
 
+  onClienteChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    this.pedidoForm.patchValue({
+      clienteId: target.value,
+      rubro: '',
+      producto: '',
+    });
+  }
+
+  onRubroChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    this.pedidoForm.patchValue({
+      rubro: target.value,
+      producto: '',
+    });
+  }
+
   toggleTransportista(id: string) {
     const current = this.selectedTransportistas();
     if (current.includes(id)) {
@@ -127,24 +190,59 @@ export class Pedidos implements OnInit, OnDestroy {
     return this.selectedTransportistas().includes(id);
   }
 
-  generarPDF(clienteId: string, transportistaIds: any[], origen: string, destino: string, tarifa: number) {
+  generarPDF(clienteId: string, transportistaIds: string[], rubro: string, producto: string, origen: string, destino: string, tarifa: number) {
     const cliente = this.clientes().find(c => c.id === clienteId);
-    const ids = transportistaIds.map(t => typeof t === 'string' ? t : t.id);
-    const transportistasSeleccionados = this.transportistas().filter(t => ids.includes(t.id));
+    const transportistasSeleccionados = this.transportistas().filter(t => transportistaIds.includes(t.id));
     const fecha = new Date().toLocaleDateString();
 
     const doc = new jsPDF('landscape');
-    
-    // Encabezado
-    doc.setFontSize(20);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const marginX = 14;
+
+    // Logo centrado en el encabezado (más grande)
+    const logoWidth = 72;
+    const logoHeight = 72;
+    const logoX = (pageWidth - logoWidth) / 2;
+    const logoY = 8;
+
+    try {
+      doc.addImage('/LogoGrandeEHP.png', 'PNG', logoX, logoY, logoWidth, logoHeight);
+    } catch (e) {
+      console.warn('No se pudo cargar el logo');
+    }
+
+    // Cliente + datos en un renglón de columnas (sin grilla)
+    const columns = [
+      { label: 'Cliente', value: cliente?.data?.nombre || 'N/A' },
+      { label: 'Fecha', value: fecha },
+      { label: 'Tarifa', value: `$${tarifa}` },
+      { label: 'Rubro', value: rubro || 'N/A' },
+      { label: 'Producto', value: producto || 'N/A' },
+      { label: 'Origen', value: origen || 'N/A' },
+      { label: 'Destino', value: destino || 'N/A' },
+    ];
+
+    const columnsStartY = 88;
+    const labelsY = columnsStartY;
+    const valuesY = columnsStartY + 7;
+    const usableWidth = pageWidth - marginX * 2;
+    const columnWidth = usableWidth / columns.length;
+
     doc.setFont('helvetica', 'bold');
-    doc.text(`Cliente: ${cliente?.data?.nombre || 'N/A'}`, 20, 30);
-    doc.setFontSize(14);
+    doc.setFontSize(10);
+
+    columns.forEach((col, index) => {
+      const x = marginX + index * columnWidth + columnWidth / 2;
+      doc.text(col.label, x, labelsY, { align: 'center' });
+    });
+
     doc.setFont('helvetica', 'normal');
-    doc.text(`Fecha: ${fecha}`, 20, 45);
-    doc.text(`Tarifa General: ${tarifa}`, 20, 55);
-    doc.text(`Origen: ${origen}`, 20, 65);
-    doc.text(`Destino: ${destino}`, 20, 75);
+    doc.setFontSize(10);
+
+    columns.forEach((col, index) => {
+      const x = marginX + index * columnWidth + columnWidth / 2;
+      doc.text(String(col.value), x, valuesY, { align: 'center' });
+    });
     
     // Tabla de transportistas
     const tableData = transportistasSeleccionados.map(t => [
@@ -160,10 +258,22 @@ export class Pedidos implements OnInit, OnDestroy {
     autoTable(doc, {
       head: [['Nombre Transporte', 'CUIT Transporte', 'Nombre Chofer', 'CUIT Chofer', 'Patente Chasis', 'Patente Acoplado', 'Tipo Camión']],
       body: tableData,
-      startY: 90,
+      startY: 102,
       styles: { fontSize: 10 },
       headStyles: { fillColor: [41, 128, 185], textColor: 255 },
     });
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('Muchas gracias por confíar en nosotros', pageWidth / 2, pageHeight - 8, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('Gestión comercial: Enzo Pucheta. Tel: 3512341394', pageWidth - 14, pageHeight - 18, { align: 'right' });
+    doc.text('Logistica: Constanza Cristante. Tel: 3575417516', pageWidth - 14, pageHeight - 13, { align: 'right' });
 
     doc.save('pedido.pdf');
   }
@@ -175,11 +285,16 @@ export class Pedidos implements OnInit, OnDestroy {
     }
 
     const formValue = this.pedidoForm.value;
+    const selectedTransportistaIds = this.selectedTransportistas();
+    const transportistaPayload = selectedTransportistaIds.map(id => ({ id }));
+
     try {
       await this.db.push('pedidos', {
         numeroPedido: this.pedidosCount() + 1,
         clienteId: formValue.clienteId,
-        transportistaIds: this.selectedTransportistas().map(id => ({ id })),
+        rubro: formValue.rubro,
+        producto: formValue.producto,
+        transportistaIds: transportistaPayload,
         origen: formValue.origen,
         destino: formValue.destino,
         tarifa: formValue.tarifa,
@@ -189,7 +304,15 @@ export class Pedidos implements OnInit, OnDestroy {
       alert('Pedido generado exitosamente.');
       
       // Generar PDF
-      this.generarPDF(formValue.clienteId, this.selectedTransportistas().map(id => ({ id })), formValue.origen, formValue.destino, formValue.tarifa);
+      this.generarPDF(
+        formValue.clienteId,
+        selectedTransportistaIds,
+        formValue.rubro,
+        formValue.producto,
+        formValue.origen,
+        formValue.destino,
+        formValue.tarifa,
+      );
       
       this.pedidoForm.reset();
       this.selectedTransportistas.set([]);

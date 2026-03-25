@@ -1,0 +1,122 @@
+.app-header {
+	background:
+		linear-gradient(110deg, rgba(9, 23, 39, 0.94) 0%, rgba(9, 23, 39, 0.86) 55%, rgba(13, 35, 58, 0.88) 100%),
+		radial-gradient(circle at 85% 20%, rgba(255, 186, 8, 0.16), transparent 55%);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.header-layout {
+	display: flex;
+	align-items: center;
+	width: 100%;
+}
+
+.header-left,
+.header-center,
+.header-right {
+	flex: 1;
+	display: flex;
+	align-items: center;
+}
+
+.header-left {
+	justify-content: flex-start;
+}
+
+.header-center {
+	justify-content: center;
+}
+
+.header-right {
+	justify-content: flex-end;
+}
+
+.header-action-btn {
+	width: 112px;
+	height: 44px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+	padding: 0.45rem 0.75rem;
+	line-height: 1;
+	color: #f8fafc;
+	border: 1px solid rgba(248, 250, 252, 0.28);
+	background: rgba(255, 255, 255, 0.08);
+	transition: all 0.2s ease;
+}
+
+.header-action-btn:hover,
+.header-action-btn:focus-visible {
+	color: #091727;
+	border-color: rgba(86, 115, 245, 0.95);
+	background: #3c88eb;
+}
+
+.header-action-btn i {
+	font-size: 1.15rem;
+}
+
+.header-right .dropdown-toggle::after {
+	margin-left: 0.4rem;
+}
+
+.offcanvas {
+	--bs-offcanvas-bg: transparent;
+	--bs-offcanvas-color: #f8fafc;
+	background:
+		linear-gradient(130deg, rgba(9, 23, 39, 0.97) 0%, rgba(9, 23, 39, 0.93) 52%, rgba(13, 35, 58, 0.92) 100%),
+		radial-gradient(circle at 90% 12%, rgba(255, 186, 8, 0.18), transparent 50%);
+	border-right: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.offcanvas-header {
+	border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.offcanvas-title {
+	color: #f8fafc;
+	letter-spacing: 0.02em;
+}
+
+.offcanvas .btn-close {
+	filter: invert(1) brightness(1.8);
+	opacity: 0.8;
+}
+
+.offcanvas .btn-close:hover {
+	opacity: 1;
+}
+
+.offcanvas .list-group-item {
+	background: transparent;
+	border-color: rgba(255, 255, 255, 0.14);
+	padding-inline: 0;
+}
+
+.offcanvas .list-group-item .btn {
+	color: #f8fafc;
+	font-weight: 500;
+	padding: 0.65rem 0.2rem;
+	border-radius: 0.5rem;
+	transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.offcanvas .list-group-item .btn:hover,
+.offcanvas .list-group-item .btn:focus-visible {
+	color: #091727;
+	background-color: #667dff;
+}
+
+@media (max-width: 576px) {
+	.header-action-btn {
+		width: 96px;
+		height: 40px;
+		font-size: 0.9rem;
+		padding: 0.35rem 0.55rem;
+	}
+
+	.header-action-btn i {
+		font-size: 1rem;
+	}
+}

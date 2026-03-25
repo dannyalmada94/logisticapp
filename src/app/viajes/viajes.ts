@@ -2,11 +2,12 @@ import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RealtimeDatabaseService } from '../services/realtime-db.service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-viajes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './viajes.html',
   styleUrl: './viajes.css',
 })
@@ -179,19 +180,81 @@ export class Viajes implements OnInit, OnDestroy {
   constructor(private readonly db: RealtimeDatabaseService, private fb: FormBuilder) {
     this.editForm = this.fb.group({
       clienteId: ['', Validators.required],
+      rubro: ['', Validators.required],
+      producto: ['', Validators.required],
       origen: ['', Validators.required],
       destino: ['', Validators.required],
     });
+  }
+
+  get clienteEditSeleccionado() {
+    const clienteId = this.editForm.get('clienteId')?.value;
+    return this.clientes().find(c => c.id === clienteId) ?? null;
+  }
+
+  get rubrosClienteEditSeleccionado() {
+    const cliente = this.clienteEditSeleccionado;
+    if (!cliente) {
+      return [] as string[];
+    }
+
+    const rubros = Array.isArray(cliente.data?.rubros)
+      ? cliente.data.rubros
+      : (typeof cliente.data?.rubro === 'string' ? [cliente.data.rubro] : []);
+
+    return rubros.map((r: unknown) => String(r));
+  }
+
+  get productosRubroEditSeleccionado() {
+    const cliente = this.clienteEditSeleccionado;
+    const rubro = this.editForm.get('rubro')?.value as string;
+
+    if (!cliente || !rubro) {
+      return [] as string[];
+    }
+
+    const byRubro = cliente.data?.subcategoriasByRubro;
+    if (byRubro && typeof byRubro === 'object' && Array.isArray(byRubro[rubro])) {
+      return byRubro[rubro].map((s: unknown) => String(s));
+    }
+
+    if (Array.isArray(cliente.data?.subcategorias)) {
+      const rubros = this.rubrosClienteEditSeleccionado;
+      if (rubros.length === 1 && rubros[0] === rubro) {
+        return cliente.data.subcategorias.map((s: unknown) => String(s));
+      }
+    }
+
+    return [] as string[];
   }
 
   formatDate(timestamp: number): string {
     return timestamp ? new Date(timestamp).toLocaleDateString() : 'N/A';
   }
 
+  onEditClienteChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    this.editForm.patchValue({
+      clienteId: target.value,
+      rubro: '',
+      producto: '',
+    });
+  }
+
+  onEditRubroChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    this.editForm.patchValue({
+      rubro: target.value,
+      producto: '',
+    });
+  }
+
   startEdit(pedido: { id: string; data: any }) {
     this.editingPedido.set(pedido);
     this.editForm.patchValue({
       clienteId: pedido.data.clienteId,
+      rubro: pedido.data.rubro ?? '',
+      producto: pedido.data.producto ?? '',
       origen: pedido.data.origen,
       destino: pedido.data.destino,
     });
@@ -268,6 +331,8 @@ export class Viajes implements OnInit, OnDestroy {
     try {
       await this.db.update(`pedidos/${pedido.id}`, {
         clienteId: formValue.clienteId,
+        rubro: formValue.rubro,
+        producto: formValue.producto,
         origen: formValue.origen,
         destino: formValue.destino,
         transportistaIds: this.selectedTransportistasEdit(),

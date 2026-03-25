@@ -1,54 +1,69 @@
-<section class="p-3">
-	<h2>Cobrados</h2>
+<section class="cobrados-section p-3">
+  <div class="mb-2">
+    <a routerLink="/home" class="back-link">
+      <i class="bi bi-chevron-left"></i>
+    </a>
+  </div>
+	<img src="/CobradosEHP.png" alt="Logo Cobrados" class="cobrados-logo" />
+	<h2 class="cobrados-title">Cobrados</h2>
 
 	<div *ngIf="errorMessage()" class="alert alert-danger" role="alert">
 		{{ errorMessage() }}
 	</div>
 
 	<div *ngIf="loading()" class="mb-2">
-		<small class="text-muted">Cargando cobrados…</small>
+		<small class="text-muted">Cargando cobrados...</small>
 	</div>
 
 	<div *ngIf="!loading()">
-		<div *ngIf="getCobrados().length; else empty">
-			<div class="table-responsive">
-				<table class="table table-striped">
-					<thead>
-						<tr>
-							<th>N.º Pedido</th>
-							<th>Cliente</th>
-							<th>Transporte</th>
-							<th>CTG</th>
-							<th>Cobrado</th>
-							<th>Fecha de Aprobacion</th>
-							<th>Acciones</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr *ngFor="let c of getCobrados()">
-							<td>{{ c.numeroPedido }}</td>
-							<td>{{ c.clienteNombre }}</td>
-							<td>{{ c.transporteNombre }}</td>
-							<td>{{ c.ctg }}</td>
-							<td>{{ c.cobrado | number:'1.2-2' }}</td>
-							<td>{{ formatFechaAprobacion(c.fechaAprobacion) }}</td>
-							<td>
-								<button
-									type="button"
-									class="btn btn-sm btn-outline-secondary"
-									(click)="revertirAFacturacion(c.pedidoId, c.transportistaId)"
-								>
-									Revertir
-								</button>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+		<div class="cobrados-card">
+			<div class="cobrados-card-header">Detalle de Cobrados</div>
+			<div class="cobrados-card-body">
+				<div *ngIf="getCobrados().length; else empty">
+					<div class="table-responsive">
+						<table class="table table-hover table-sm align-middle mb-0">
+							<thead class="table-dark">
+								<tr>
+									<th>N.º Pedido</th>
+									<th>Cliente</th>
+									<th>Rubro</th>
+									<th>Producto</th>
+									<th>Transporte</th>
+									<th>CTG</th>
+									<th>Cobrado</th>
+									<th>Fecha de Aprobación</th>
+									<th>Acciones</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr *ngFor="let c of getCobrados()">
+									<td>{{ c.numeroPedido }}</td>
+									<td>{{ c.clienteNombre }}</td>
+									<td>{{ c.rubro | titlecase }}</td>
+									<td>{{ c.producto | titlecase }}</td>
+									<td>{{ c.transporteNombre }}</td>
+									<td>{{ c.ctg }}</td>
+									<td>{{ c.cobrado | number:'1.2-2' }}</td>
+									<td>{{ formatFechaAprobacion(c.fechaAprobacion) }}</td>
+									<td>
+										<button
+											type="button"
+											class="btn btn-sm btn-outline-secondary"
+											(click)="revertirAFacturacion(c.pedidoId, c.transportistaId)"
+										>
+											Revertir
+										</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
 			</div>
 		</div>
 
 		<ng-template #empty>
-			<p class="text-muted">No hay elementos cobrados todavía.</p>
+			<p class="text-muted mb-0">No hay elementos cobrados todavía.</p>
 		</ng-template>
 	</div>
 </section>

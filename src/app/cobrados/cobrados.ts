@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RealtimeDatabaseService } from '../services/realtime-db.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-cobrados',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './cobrados.html',
   styleUrl: './cobrados.css',
 })
@@ -151,6 +152,8 @@ export class Cobrados implements OnInit, OnDestroy {
           transportistaId,
           numeroPedido,
           clienteNombre,
+          rubro: pedido.data?.rubro ?? 'N/A',
+          producto: pedido.data?.producto ?? 'N/A',
           transporteNombre: this.getTransportistaNombre(transportistaId),
           ctg: t.ctg ?? 'N/A',
           cobrado,

@@ -1,0 +1,64 @@
+.app-footer {
+	background:
+		linear-gradient(110deg, rgba(9, 23, 39, 0.94) 0%, rgba(9, 23, 39, 0.86) 55%, rgba(13, 35, 58, 0.88) 100%),
+		radial-gradient(circle at 85% 20%, rgba(255, 186, 8, 0.16), transparent 55%);
+	border-top: 1px solid rgba(255, 255, 255, 0.14);
+	padding: 1rem 0;
+}
+
+.footer-content {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.footer-brand {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.footer-logo {
+	max-height: 42px;
+	width: auto;
+}
+
+.footer-copy {
+	margin: 0;
+	font-size: 0.9rem;
+	color: rgba(248, 250, 252, 0.88);
+}
+
+.footer-social {
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
+}
+
+.footer-social-link {
+	color: #f8fafc;
+	font-size: 1.35rem;
+	line-height: 1;
+	text-decoration: none;
+	transition: color 0.2s ease;
+}
+
+.footer-social-link:hover {
+	color: #ffd166;
+}
+
+@media (max-width: 768px) {
+	.footer-content,
+	.footer-brand,
+	.footer-social {
+		justify-content: center;
+		text-align: center;
+	}
+
+	.footer-copy {
+		width: 100%;
+	}
+}
