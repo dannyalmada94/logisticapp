@@ -187,33 +187,8 @@
 		padding: clamp(0.8rem, 3.4vw, 1.15rem);
 	}
 
-	/* En móvil/touch se evita el salto por hover */
 	.landing-content:hover {
-		transform: translateX(-50%);
-		box-shadow: 0 12px 26px rgba(9, 23, 39, 0.28);
-		background: rgba(9, 23, 39, 0.45);
-	}
-
-	.landing-brand-logo {
-		width: clamp(7.5rem, 36vw, 11rem);
-		margin-inline: auto;
-		transform: translateY(-0.05rem) scale(1.12);
-	}
-
-	.landing-kicker {
-		margin-bottom: 0.5rem;
-	}
-
-	.landing-subtitle {
-		margin-top: 0.75rem;
-		margin-bottom: 1rem;
-		font-size: clamp(0.9rem, 3.8vw, 1rem);
-		line-height: 1.45;
-	}
-
-	.landing-actions {
-		gap: 0.6rem;
-		justify-content: center;
+		transform: translateX(-50%) !important;
 	}
 
 	.landing-btn {
@@ -226,11 +201,5 @@
 @media (hover: none), (pointer: coarse) {
 	.landing-content {
 		transition: box-shadow 0.28s ease, background-color 0.28s ease;
-	}
-
-	.landing-content:hover {
-		transform: none;
-		box-shadow: 0 12px 26px rgba(9, 23, 39, 0.28);
-		background: rgba(9, 23, 39, 0.45);
 	}
 }
