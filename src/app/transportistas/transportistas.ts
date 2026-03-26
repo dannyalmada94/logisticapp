@@ -1,13 +1,13 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { RealtimeDatabaseService } from '../services/realtime-db.service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-transportistas',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterOutlet, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule],
   templateUrl: './transportistas.html',
   styleUrl: './transportistas.css',
 })
@@ -76,6 +76,10 @@ export class Transportistas implements OnInit, OnDestroy {
 
   get totalPages() {
     return Math.ceil(this.filteredTransportistas.length / this.itemsPerPage);
+  }
+
+  get pageNumbers() {
+    return Array.from({ length: this.totalPages }, (_, index) => index + 1);
   }
 
   ngOnInit() {
@@ -187,6 +191,9 @@ export class Transportistas implements OnInit, OnDestroy {
   }
 
   changePage(page: number) {
+    if (page < 1 || page > this.totalPages) {
+      return;
+    }
     this.currentPage.set(page);
   }
 

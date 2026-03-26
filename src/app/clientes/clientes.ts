@@ -18,6 +18,8 @@ export class Clientes implements OnInit, OnDestroy {
   loading = signal(true);
   errorMessage = signal<string | null>(null);
   searchTerm = signal('');
+  currentPage = signal(1);
+  itemsPerPage = 10;
   showAddForm = signal(false);
   showEditForm = signal(false);
   editingItem = signal<{ id: string; data: any } | null>(null);
@@ -77,7 +79,20 @@ export class Clientes implements OnInit, OnDestroy {
     return this.clientes().filter(c =>
       c.data?.nombre?.toLowerCase().includes(term) ||
       c.data?.email?.toLowerCase().includes(term)
-    ).slice(0, 10);
+    );
+  }
+
+  get paginatedClientes() {
+    const start = (this.currentPage() - 1) * this.itemsPerPage;
+    return this.filteredClientes.slice(start, start + this.itemsPerPage);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.filteredClientes.length / this.itemsPerPage);
+  }
+
+  get pageNumbers() {
+    return Array.from({ length: this.totalPages }, (_, index) => index + 1);
   }
 
   ngOnInit() {
@@ -490,6 +505,14 @@ export class Clientes implements OnInit, OnDestroy {
   onSearchChange(event: Event) {
     const target = event.target as HTMLInputElement;
     this.searchTerm.set(target.value);
+    this.currentPage.set(1);
+  }
+
+  changePage(page: number) {
+    if (page < 1 || page > this.totalPages) {
+      return;
+    }
+    this.currentPage.set(page);
   }
 
   async remove(item: { id: string; data: any }) {

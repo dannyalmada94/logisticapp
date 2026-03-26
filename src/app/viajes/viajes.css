@@ -74,7 +74,9 @@
 
 .viajes-modal-table-wrap {
 	border: 1px solid rgba(9, 23, 39, 0.1);
-	overflow: hidden;
+	overflow-x: auto;
+	overflow-y: hidden;
+	-webkit-overflow-scrolling: touch;
 }
 
 .viajes-modal-footer {
@@ -84,4 +86,18 @@
 
 .table-responsive {
 	border-radius: 10px;
+}
+
+.viajes-row-ready > td {
+	background: rgba(191, 219, 254, 0.18);
+	border-top: 2px solid #93c5fd;
+	border-bottom: 2px solid #93c5fd;
+}
+
+.viajes-row-ready > td:first-child {
+	border-left: 2px solid #93c5fd;
+}
+
+.viajes-row-ready > td:last-child {
+	border-right: 2px solid #93c5fd;
 }

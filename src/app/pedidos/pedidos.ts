@@ -14,6 +14,21 @@ import { RouterLink } from '@angular/router';
   styleUrl: './pedidos.css',
 })
 export class Pedidos implements OnInit, OnDestroy {
+  private readonly ubicacionesPorRubro: Record<string, { origen: string[]; destino: string[] }> = {
+    agro: {
+      origen: ['campo', 'planta', 'acondicionadora'],
+      destino: ['planta', 'consumo', 'feedlot', 'forrajera', 'puerto'],
+    },
+    productos: {
+      origen: ['puerto', 'planta', 'campo', 'fabrica'],
+      destino: ['campo', 'planta', 'puerto', 'fabrica', 'feedlot', 'forrajera'],
+    },
+    aridos: {
+      origen: ['cantera', 'corralon', 'planta', 'fabrica'],
+      destino: ['planta', 'obra', 'puerto', 'corralon'],
+    },
+  };
+
   clientes = signal<Array<{ id: string; data: any }>>([]);
   transportistas = signal<Array<{ id: string; data: any }>>([]);
   loading = signal(true);
@@ -23,6 +38,11 @@ export class Pedidos implements OnInit, OnDestroy {
   pedidoForm: FormGroup;
   selectedTransportistas = signal<string[]>([]);
   searchTerm = signal('');
+  currentPage = signal(1);
+  itemsPerPage = 6;
+  showConfirmModal = signal(false);
+  descripcionPedido = signal('');
+  descripcionError = signal<string | null>(null);
 
   get filteredTransportistas() {
     const term = this.searchTerm().toLowerCase();
@@ -32,8 +52,20 @@ export class Pedidos implements OnInit, OnDestroy {
         t.data?.nombreChofer?.toLowerCase().includes(term) ||
         t.data?.patenteChasis?.toLowerCase().includes(term) ||
         t.data?.patenteAcoplado?.toLowerCase().includes(term)
-      )
-      .slice(0, 6);
+      );
+  }
+
+  get paginatedTransportistas() {
+    const start = (this.currentPage() - 1) * this.itemsPerPage;
+    return this.filteredTransportistas.slice(start, start + this.itemsPerPage);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.filteredTransportistas.length / this.itemsPerPage);
+  }
+
+  get pageNumbers() {
+    return Array.from({ length: this.totalPages }, (_, index) => index + 1);
   }
 
   private unsubscribeClientes?: () => void;
@@ -90,6 +122,46 @@ export class Pedidos implements OnInit, OnDestroy {
     }
 
     return [] as string[];
+  }
+
+  private normalizeRubroKey(rubro: string): string {
+    const normalized = rubro
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+
+    if (normalized === 'agricola' || normalized === 'agro' || normalized === 'agropecuario') {
+      return 'agro';
+    }
+
+    if (normalized === 'aridos' || normalized === 'arido') {
+      return 'aridos';
+    }
+
+    if (normalized === 'producto' || normalized === 'productos') {
+      return 'productos';
+    }
+
+    return normalized;
+  }
+
+  get origenesDelRubroSeleccionado() {
+    const rubro = this.pedidoForm.get('rubro')?.value as string;
+    if (!rubro) {
+      return [] as string[];
+    }
+    const key = this.normalizeRubroKey(rubro);
+    return this.ubicacionesPorRubro[key]?.origen ?? [];
+  }
+
+  get destinosDelRubroSeleccionado() {
+    const rubro = this.pedidoForm.get('rubro')?.value as string;
+    if (!rubro) {
+      return [] as string[];
+    }
+    const key = this.normalizeRubroKey(rubro);
+    return this.ubicacionesPorRubro[key]?.destino ?? [];
   }
 
   ngOnInit() {
@@ -158,6 +230,14 @@ export class Pedidos implements OnInit, OnDestroy {
   onSearchChange(event: Event) {
     const target = event.target as HTMLInputElement;
     this.searchTerm.set(target.value);
+    this.currentPage.set(1);
+  }
+
+  changePage(page: number) {
+    if (page < 1 || page > this.totalPages) {
+      return;
+    }
+    this.currentPage.set(page);
   }
 
   onClienteChange(event: Event) {
@@ -166,6 +246,8 @@ export class Pedidos implements OnInit, OnDestroy {
       clienteId: target.value,
       rubro: '',
       producto: '',
+      origen: '',
+      destino: '',
     });
   }
 
@@ -174,6 +256,8 @@ export class Pedidos implements OnInit, OnDestroy {
     this.pedidoForm.patchValue({
       rubro: target.value,
       producto: '',
+      origen: '',
+      destino: '',
     });
   }
 
@@ -190,28 +274,52 @@ export class Pedidos implements OnInit, OnDestroy {
     return this.selectedTransportistas().includes(id);
   }
 
-  generarPDF(clienteId: string, transportistaIds: string[], rubro: string, producto: string, origen: string, destino: string, tarifa: number) {
+  onDescripcionChange(event: Event) {
+    const target = event.target as HTMLTextAreaElement;
+    this.descripcionPedido.set(target.value);
+    this.descripcionError.set(null);
+  }
+
+  abrirModalConfirmacion() {
+    if (this.pedidoForm.invalid || this.selectedTransportistas().length === 0) {
+      this.errorMessage.set('Selecciona un cliente y al menos 1 transportista.');
+      this.pedidoForm.markAllAsTouched();
+      return;
+    }
+
+    this.errorMessage.set(null);
+    this.descripcionError.set(null);
+    this.showConfirmModal.set(true);
+  }
+
+  cerrarModalConfirmacion() {
+    this.showConfirmModal.set(false);
+    this.descripcionError.set(null);
+  }
+
+  generarPDF(clienteId: string, transportistaIds: string[], rubro: string, producto: string, origen: string, destino: string, tarifa: number, descripcion: string) {
     const cliente = this.clientes().find(c => c.id === clienteId);
     const transportistasSeleccionados = this.transportistas().filter(t => transportistaIds.includes(t.id));
     const fecha = new Date().toLocaleDateString();
 
     const doc = new jsPDF('landscape');
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const marginX = 14;
 
-    // Logo centrado en el encabezado (más grande)
-    const logoWidth = 72;
-    const logoHeight = 72;
+    const logoWidth = 55;
+    const logoHeight = 55;
     const logoX = (pageWidth - logoWidth) / 2;
-    const logoY = 8;
+    const logoY = 5;
+    const footerReserve = 30;
+    const descripcionY = 69;
+    const descripcionTexto = `${(descripcion || 'N/A').toUpperCase()}`;
+    const descripcionLineas = doc.splitTextToSize(descripcionTexto, pageWidth - marginX * 2);
+    const columnsStartY = descripcionY + descripcionLineas.length * 5 + 5;
+    const labelsY = columnsStartY;
+    const valuesY = labelsY + 7;
+    const tableStartY = valuesY + 8;
 
-    try {
-      doc.addImage('/LogoGrandeEHP.png', 'PNG', logoX, logoY, logoWidth, logoHeight);
-    } catch (e) {
-      console.warn('No se pudo cargar el logo');
-    }
-
-    // Cliente + datos en un renglón de columnas (sin grilla)
     const columns = [
       { label: 'Cliente', value: cliente?.data?.nombre || 'N/A' },
       { label: 'Fecha', value: fecha },
@@ -222,28 +330,45 @@ export class Pedidos implements OnInit, OnDestroy {
       { label: 'Destino', value: destino || 'N/A' },
     ];
 
-    const columnsStartY = 88;
-    const labelsY = columnsStartY;
-    const valuesY = columnsStartY + 7;
-    const usableWidth = pageWidth - marginX * 2;
-    const columnWidth = usableWidth / columns.length;
+    // Dibuja encabezado (logo + datos del pedido) y footer en la página actual
+    const drawPageContent = () => {
+      try {
+        doc.addImage('/LogoCortoEHP.png', 'PNG', logoX, logoY, logoWidth, logoHeight);
+      } catch (e) {
+        console.warn('No se pudo cargar el logo');
+      }
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
+      const usableWidth = pageWidth - marginX * 2;
+      const columnWidth = usableWidth / columns.length;
 
-    columns.forEach((col, index) => {
-      const x = marginX + index * columnWidth + columnWidth / 2;
-      doc.text(col.label, x, labelsY, { align: 'center' });
-    });
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(descripcionLineas, pageWidth / 2, descripcionY, { align: 'center' });
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      columns.forEach((col, index) => {
+        const x = marginX + index * columnWidth + columnWidth / 2;
+        doc.text(col.label, x, labelsY, { align: 'center' });
+      });
 
-    columns.forEach((col, index) => {
-      const x = marginX + index * columnWidth + columnWidth / 2;
-      doc.text(String(col.value), x, valuesY, { align: 'center' });
-    });
-    
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      columns.forEach((col, index) => {
+        const x = marginX + index * columnWidth + columnWidth / 2;
+        doc.text(String(col.value), x, valuesY, { align: 'center' });
+      });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('Muchas gracias por confíar en nosotros', pageWidth / 2, pageHeight - 8, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text('Gestión comercial: Enzo Pucheta. Tel: 3512341394', pageWidth - 14, pageHeight - 18, { align: 'right' });
+      doc.text('Logistica: Constanza Cristante. Tel: 3575417516', pageWidth - 14, pageHeight - 13, { align: 'right' });
+    };
+
     // Tabla de transportistas
     const tableData = transportistasSeleccionados.map(t => [
       t.data?.nombreTransporte || 'N/A',
@@ -258,29 +383,27 @@ export class Pedidos implements OnInit, OnDestroy {
     autoTable(doc, {
       head: [['Nombre Transporte', 'CUIT Transporte', 'Nombre Chofer', 'CUIT Chofer', 'Patente Chasis', 'Patente Acoplado', 'Tipo Camión']],
       body: tableData,
-      startY: 102,
+      startY: tableStartY,
+      margin: { top: tableStartY, bottom: footerReserve },
       styles: { fontSize: 10 },
       headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      didDrawPage: () => {
+        drawPageContent();
+      },
     });
-
-    // Footer
-    const pageHeight = doc.internal.pageSize.getHeight();
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.text('Muchas gracias por confíar en nosotros', pageWidth / 2, pageHeight - 8, { align: 'center' });
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.text('Gestión comercial: Enzo Pucheta. Tel: 3512341394', pageWidth - 14, pageHeight - 18, { align: 'right' });
-    doc.text('Logistica: Constanza Cristante. Tel: 3575417516', pageWidth - 14, pageHeight - 13, { align: 'right' });
 
     doc.save('pedido.pdf');
   }
 
   async generarPedido() {
-    if (this.pedidoForm.invalid || this.selectedTransportistas().length === 0) {
-      this.errorMessage.set('Selecciona un cliente y al menos 1 transportista.');
+    const descripcion = this.descripcionPedido().trim();
+    if (!descripcion) {
+      this.descripcionError.set('La descripción es obligatoria.');
+      return;
+    }
+
+    if (descripcion.length > 120) {
+      this.descripcionError.set('La descripción admite hasta 120 caracteres.');
       return;
     }
 
@@ -312,10 +435,13 @@ export class Pedidos implements OnInit, OnDestroy {
         formValue.origen,
         formValue.destino,
         formValue.tarifa,
+        descripcion,
       );
       
       this.pedidoForm.reset();
       this.selectedTransportistas.set([]);
+      this.descripcionPedido.set('');
+      this.cerrarModalConfirmacion();
     } catch (err) {
       console.error('Error generando pedido:', err);
       this.errorMessage.set('No se pudo generar el pedido.');

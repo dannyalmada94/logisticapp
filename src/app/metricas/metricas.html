@@ -61,6 +61,13 @@
 						<div class="metricas-stat-value metricas-stat-value-money">{{ formatMoney(montoTotalCobrado()) }}</div>
 					</div>
 				</div>
+
+				<div class="col-12 col-md-6">
+					<div class="metricas-stat-card h-100">
+						<div class="metricas-stat-title">Toneladas Totales Confirmadas</div>
+						<div class="metricas-stat-value metricas-stat-value-money">{{ formatToneladas(toneladasTotalesFacturadas()) }} tn</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -68,82 +75,27 @@
 	<div class="metricas-card mt-4">
 		<div class="metricas-card-header">Evolución de métricas</div>
 		<div class="metricas-card-body">
-			<p class="mb-3">En esta sección visualizaremos la evolución temporal mediante gráficos.</p>
-
-			<div class="metricas-quick-filter mb-3 d-flex flex-wrap gap-2">
-				<button
-					type="button"
-					class="btn"
-					[class.btn-dark]="filtroRapido() === 'custom'"
-					[class.btn-outline-dark]="filtroRapido() !== 'custom'"
-					(click)="setFiltroRapido('custom')"
-				>
-					Rango personalizado
-				</button>
-				<button
-					type="button"
-					class="btn"
-					[class.btn-dark]="filtroRapido() === 'ultimoMes'"
-					[class.btn-outline-dark]="filtroRapido() !== 'ultimoMes'"
-					(click)="setFiltroRapido('ultimoMes')"
-				>
-					Último mes
-				</button>
-			</div>
-
-			<div class="metricas-filters row g-2 align-items-end mb-3">
-				<div class="col-12 col-md-4">
-					<label class="form-label metricas-filter-label" for="fechaDesde">Desde</label>
-					<input
-						id="fechaDesde"
-						type="text"
-						class="form-control"
-						placeholder="dd/mm/aaaa"
-						maxlength="10"
-						[value]="fechaDesde()"
-						[disabled]="filtroRapido() === 'ultimoMes'"
-						(keydown)="onFechaFilterKeydown($event)"
-						(input)="onFechaFilterInput('desde', $event)"
-					/>
-				</div>
-
-				<div class="col-12 col-md-4">
-					<label class="form-label metricas-filter-label" for="fechaHasta">Hasta</label>
-					<input
-						id="fechaHasta"
-						type="text"
-						class="form-control"
-						placeholder="dd/mm/aaaa"
-						maxlength="10"
-						[value]="fechaHasta()"
-						[disabled]="filtroRapido() === 'ultimoMes'"
-						(keydown)="onFechaFilterKeydown($event)"
-						(input)="onFechaFilterInput('hasta', $event)"
-					/>
-				</div>
-
-				<div class="col-12 col-md-4 d-flex gap-2">
-					<button
-						type="button"
-						class="btn btn-primary metricas-filter-btn"
-						[disabled]="filtroRapido() === 'ultimoMes'"
-						(click)="aplicarFiltroFechas()"
-					>
-						Aplicar
-					</button>
-					<button type="button" class="btn btn-outline-secondary metricas-filter-btn" (click)="limpiarFiltroFechas()">Limpiar</button>
-				</div>
-			</div>
-
-			<div *ngIf="filterError()" class="alert alert-warning py-2" role="alert">
-				{{ filterError() }}
-			</div>
-
 			<div class="row g-3">
-				<div class="col-12 col-lg-8">
+				<div class="col-12">
 					<div class="metricas-chart-placeholder h-100">
-						<div class="metricas-chart-title">Evolución de pedidos y viajes</div>
-						<div class="metricas-chart-caption">Gráfico temporal (líneas)</div>
+						<div class="metricas-chart-title">Evolución de viajes generados</div>
+						<div class="metricas-chart-caption">Cada transportista cuenta como 1 viaje</div>
+						<div class="row g-2 mb-2 text-start">
+							<div class="col-12 col-md-4">
+								<label class="form-label metricas-filter-label mb-1" for="evolucionPeriodoSelect">Periodo</label>
+								<select
+									id="evolucionPeriodoSelect"
+									class="form-select form-select-sm"
+									[value]="evolucionPeriodo()"
+									(change)="onEvolucionPeriodoChange($event)"
+								>
+									<option value="ultimoMes">Ultimo mes</option>
+									<option value="ultimos3Meses">Ultimos 3 meses</option>
+									<option value="ultimos6Meses">Ultimos 6 meses</option>
+									<option value="ultimoAnio">Ultimo año</option>
+								</select>
+							</div>
+						</div>
 						<div class="metricas-chart-canvas-wrap">
 							<canvas #evolucionChart class="metricas-chart-canvas"></canvas>
 						</div>
@@ -152,10 +104,56 @@
 
 				<div class="col-12 col-lg-4">
 					<div class="metricas-chart-placeholder h-100">
-						<div class="metricas-chart-title">Distribución actual</div>
-						<div class="metricas-chart-caption">Gráfico de composición</div>
+						<div class="metricas-chart-title">Participación por cliente</div>
+						<div class="metricas-chart-caption">Viajes confirmados que pasaron a facturación</div>
+						<div class="row g-2 mb-2 text-start">
+							<div class="col-12 col-md-6">
+								<label class="form-label metricas-filter-label mb-1" for="clienteFiltroChart">Cliente</label>
+								<select
+									id="clienteFiltroChart"
+									class="form-select form-select-sm"
+									[value]="clienteFiltroRubroChart()"
+									(change)="onClienteFiltroRubroChartChange($event)"
+								>
+									<option value="all">Todos</option>
+									<option *ngFor="let c of clientesFiltroOptions()" [value]="c.id">{{ c.nombre }}</option>
+								</select>
+							</div>
+							<div class="col-12 col-md-6">
+								<label class="form-label metricas-filter-label mb-1" for="rubroFiltroChart">Rubro</label>
+								<select
+									id="rubroFiltroChart"
+									class="form-select form-select-sm"
+									[value]="rubroFiltroRubroChart()"
+									(change)="onRubroFiltroRubroChartChange($event)"
+								>
+									<option value="all">Todos</option>
+									<option *ngFor="let rubro of rubrosFiltroOptions()" [value]="rubro">{{ rubro }}</option>
+								</select>
+							</div>
+						</div>
 						<div class="metricas-chart-canvas-wrap">
-							<canvas #distribucionChart class="metricas-chart-canvas"></canvas>
+							<canvas #rubrosChart class="metricas-chart-canvas"></canvas>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-12 col-lg-4">
+					<div class="metricas-chart-placeholder h-100">
+						<div class="metricas-chart-title">Participación por rubro</div>
+						<div class="metricas-chart-caption">Depende del cliente seleccionado</div>
+						<div class="metricas-chart-canvas-wrap">
+							<canvas #subcategoriasChart class="metricas-chart-canvas"></canvas>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-12 col-lg-4">
+					<div class="metricas-chart-placeholder h-100">
+						<div class="metricas-chart-title">Subcategorías del rubro</div>
+						<div class="metricas-chart-caption">Participación por viajes (tn en la leyenda)</div>
+						<div class="metricas-chart-canvas-wrap">
+							<canvas #subcategoriasDetalleChart class="metricas-chart-canvas"></canvas>
 						</div>
 					</div>
 				</div>
@@ -164,6 +162,46 @@
 					<div class="metricas-chart-placeholder metricas-chart-placeholder-wide">
 						<div class="metricas-chart-title">Facturación vs Cobrado</div>
 						<div class="metricas-chart-caption">Comparativa de montos en el tiempo</div>
+						<div class="row g-2 mb-2 text-start">
+							<div class="col-12 col-md-3">
+								<label class="form-label metricas-filter-label mb-1" for="facturacionAnioSelect">Año</label>
+								<select
+									id="facturacionAnioSelect"
+									class="form-select form-select-sm"
+									[value]="facturacionAnioFiltro()"
+									(change)="onFacturacionAnioFiltroChange($event)"
+								>
+									<option value="all">Todos</option>
+									<option *ngFor="let anio of facturacionAnioOptions()" [value]="anio">{{ anio }}</option>
+								</select>
+							</div>
+							<div class="col-12 col-md-3">
+								<label class="form-label metricas-filter-label mb-1" for="facturacionMesSelect">Mes</label>
+								<select
+									id="facturacionMesSelect"
+									class="form-select form-select-sm"
+									[value]="facturacionMesFiltro()"
+									(change)="onFacturacionMesFiltroChange($event)"
+								>
+									<option value="all">Todos</option>
+									<option *ngFor="let mes of facturacionMesOptions()" [value]="mes.value">{{ mes.label }}</option>
+								</select>
+							</div>
+						</div>
+						<div class="row g-2 mb-2 text-start">
+							<div class="col-12 col-md-4">
+								<small class="text-muted d-block">Total Facturado</small>
+								<strong>{{ formatMoney(resumenFacturado()) }}</strong>
+							</div>
+							<div class="col-12 col-md-4">
+								<small class="text-muted d-block">Total Cobrado</small>
+								<strong>{{ formatMoney(resumenCobrado()) }}</strong>
+							</div>
+							<div class="col-12 col-md-4">
+								<small class="text-muted d-block">Tasa de Cobro Acumulada</small>
+								<strong>{{ resumenTasaCobro() }}%</strong>
+							</div>
+						</div>
 						<div class="metricas-chart-canvas-wrap">
 							<canvas #facturacionChart class="metricas-chart-canvas"></canvas>
 						</div>

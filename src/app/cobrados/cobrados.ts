@@ -16,6 +16,8 @@ export class Cobrados implements OnInit, OnDestroy {
   transportistas = signal<Array<{ id: string; data: any }>>([]);
   loading = signal(true);
   errorMessage = signal<string | null>(null);
+  currentPage = signal(1);
+  itemsPerPage = 10;
 
   private unsubscribePedidos?: () => void;
   private unsubscribeClientes?: () => void;
@@ -163,5 +165,25 @@ export class Cobrados implements OnInit, OnDestroy {
     });
 
     return rows;
+  }
+
+  get paginatedCobrados() {
+    const start = (this.currentPage() - 1) * this.itemsPerPage;
+    return this.getCobrados().slice(start, start + this.itemsPerPage);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.getCobrados().length / this.itemsPerPage);
+  }
+
+  get pageNumbers() {
+    return Array.from({ length: this.totalPages }, (_, index) => index + 1);
+  }
+
+  changePage(page: number) {
+    if (page < 1 || page > this.totalPages) {
+      return;
+    }
+    this.currentPage.set(page);
   }
 }

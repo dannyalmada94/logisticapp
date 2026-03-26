@@ -10,10 +10,11 @@ import { Metricas } from './metricas/metricas';
 import { Login } from './login/login';
 import { Landing } from './landing/landing';
 import { authGuard } from './guards/auth.guard';
+import { guestGuard } from './guards/guest.guard';
 
 export const routes: Routes = [
-    {path:'landing', component: Landing},
-    {path:'login', component: Login},
+    {path:'landing', component: Landing, canActivate: [guestGuard]},
+    {path:'login', component: Login, canActivate: [guestGuard]},
     {path:'home', component: Home, canActivate: [authGuard]},
     {path:'transportistas', component: Transportistas, canActivate: [authGuard]},
     {path:'clientes', component: Clientes, canActivate: [authGuard]},

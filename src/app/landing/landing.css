@@ -30,13 +30,12 @@
 	color: #f8fafc;
 	width: min(92vw, 680px);
 	max-width: 680px;
-	max-height: min(66dvh, 520px);
 	padding: clamp(1rem, 2.2vw, 1.6rem);
 	background: rgba(9, 23, 39, 0.45);
 	border: 1px solid rgba(255, 255, 255, 0.16);
 	border-radius: 14px;
 	backdrop-filter: blur(2px);
-	overflow-y: auto;
+	overflow: visible;
 	box-shadow: 0 12px 26px rgba(9, 23, 39, 0.28);
 	transition: transform 0.28s ease, box-shadow 0.28s ease, background-color 0.28s ease;
 }
@@ -183,7 +182,6 @@
 		margin: 0;
 		width: min(92vw, 40rem);
 		max-width: 640px;
-		max-height: min(60dvh, 420px);
 		padding: clamp(0.8rem, 3.4vw, 1.15rem);
 	}
 

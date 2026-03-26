@@ -17,6 +17,8 @@ export class Viajes implements OnInit, OnDestroy {
   transportistas = signal<Array<{ id: string; data: any }>>([]);
   loading = signal(true);
   errorMessage = signal<string | null>(null);
+  currentPage = signal(1);
+  itemsPerPage = 10;
   showEditForm = signal(false);
   editingPedido = signal<{ id: string; data: any } | null>(null);
   selectedTransportistasEdit = signal<Array<{id: string, ctg?: number, toneladasDescargadas?: number, tarifa?: number}>>([]);
@@ -114,6 +116,19 @@ export class Viajes implements OnInit, OnDestroy {
     return this.pedidos().filter(p => !p.data?.finalizado);
   }
 
+  get paginatedPedidosActivos() {
+    const start = (this.currentPage() - 1) * this.itemsPerPage;
+    return this.getPedidosActivos().slice(start, start + this.itemsPerPage);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.getPedidosActivos().length / this.itemsPerPage);
+  }
+
+  get pageNumbers() {
+    return Array.from({ length: this.totalPages }, (_, index) => index + 1);
+  }
+
   getFinalizadoValue(pedido: { id: string; data: any }): 'NO' | 'SI' {
     return pedido.data?.finalizado ? 'SI' : 'NO';
   }
@@ -131,6 +146,14 @@ export class Viajes implements OnInit, OnDestroy {
     const hasTarifa = transportista.tarifa !== null && transportista.tarifa !== undefined && transportista.tarifa !== '';
 
     return hasCtg && hasToneladas && hasTarifa;
+  }
+
+  isPedidoListoParaConfirmar(pedido: { id: string; data: any }): boolean {
+    const transportistas = Array.isArray(pedido.data?.transportistaIds)
+      ? pedido.data.transportistaIds
+      : [];
+
+    return transportistas.length > 0 && transportistas.every((t: any) => this.tieneDatosCompletosParaFinalizar(t));
   }
 
   async onFinalizadoChange(pedido: { id: string; data: any }, event: Event) {
@@ -230,6 +253,13 @@ export class Viajes implements OnInit, OnDestroy {
 
   formatDate(timestamp: number): string {
     return timestamp ? new Date(timestamp).toLocaleDateString() : 'N/A';
+  }
+
+  changePage(page: number) {
+    if (page < 1 || page > this.totalPages) {
+      return;
+    }
+    this.currentPage.set(page);
   }
 
   onEditClienteChange(event: Event) {
