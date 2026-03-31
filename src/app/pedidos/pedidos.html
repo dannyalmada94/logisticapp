@@ -139,14 +139,14 @@
     </form>
   </div>
 
-  <div *ngIf="showConfirmModal()" class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+  <div *ngIf="showConfirmModal()" class="modal fade show d-block pedido-confirm-modal" tabindex="-1" role="dialog" aria-modal="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
+      <div class="modal-content pedido-confirm-content">
+        <div class="modal-header pedido-confirm-header">
           <h5 class="modal-title">Confirmar pedido</h5>
           <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarModalConfirmacion()"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body pedido-confirm-body">
           <label for="descripcionPedido" class="form-label">Descripción</label>
           <textarea
             id="descripcionPedido"
@@ -160,7 +160,7 @@
           <div class="text-muted small mt-1">{{ descripcionPedido().length }}/120</div>
           <div *ngIf="descripcionError()" class="text-danger small mt-2">{{ descripcionError() }}</div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer pedido-confirm-footer">
           <button type="button" class="btn btn-outline-secondary" (click)="cerrarModalConfirmacion()">Cancelar</button>
           <button
             type="button"
@@ -174,5 +174,5 @@
       </div>
     </div>
   </div>
-  <div *ngIf="showConfirmModal()" class="modal-backdrop fade show"></div>
+  <div *ngIf="showConfirmModal()" class="modal-backdrop fade show pedido-confirm-backdrop"></div>
 </section>

@@ -38,11 +38,15 @@
                   <th>Fecha de Cobro</th>
                   <th>Cobro</th>
                   <th>Pago</th>
+                  <th class="text-center">Generar Pedido de Pago</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let f of paginatedFacturas; trackBy: trackByFactura">
+                <tr
+                  *ngFor="let f of paginatedFacturas; trackBy: trackByFactura"
+                  [class.factura-row-cobro-si]="f.cobro === 'SI'"
+                >
                   <td>{{ f.numeroPedido }}</td>
                   <td>{{ f.clienteNombre }}</td>
                   <td>{{ f.rubro | titlecase }}</td>
@@ -88,6 +92,15 @@
                       <option value="SI">SI</option>
                     </select>
                   </td>
+                  <td class="text-center">
+                    <input
+                      type="checkbox"
+                      class="form-check-input fs-5"
+                      [checked]="isPedidoPagoSeleccionado(f.pedidoId, f.transportistaId)"
+                      [disabled]="f.cobro !== 'SI'"
+                      (change)="togglePedidoPago(f.pedidoId, f.transportistaId)"
+                    />
+                  </td>
                   <td>
                     <button
                       type="button"
@@ -100,6 +113,17 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <div class="d-flex justify-content-end mt-3">
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="!haySeleccionados"
+              (click)="generarPedidoPagoPDF()"
+            >
+              <i class="bi bi-file-earmark-pdf me-1"></i> GENERAR PDF
+            </button>
           </div>
 
           <nav *ngIf="totalPages > 1" aria-label="Paginación" class="mt-3">
@@ -115,6 +139,68 @@
               </li>
             </ul>
           </nav>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="modalPedidoPagoOpen()" class="pedido-pago-modal-backdrop" (click)="cerrarModalPedidoPago()"></div>
+    <div *ngIf="modalPedidoPagoOpen()" class="pedido-pago-modal-wrap" role="dialog" aria-modal="true" aria-labelledby="pedidoPagoModalTitle">
+      <div class="pedido-pago-modal card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 id="pedidoPagoModalTitle" class="mb-0">Resumen para Pedido de Pago</h5>
+          <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarModalPedidoPago()"></button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-2">
+              <thead class="table-light">
+                <tr>
+                  <th>Transporte</th>
+                  <th>CTG</th>
+                  <th>FACTURA</th>
+                  <th class="text-end">Pendiente a Cobrar</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of pedidoPagoModalItems(); trackBy: trackByFacturaPedidoPago">
+                  <td>{{ item.transporteNombre }}</td>
+                  <td>{{ item.ctg }}</td>
+                  <td>
+                    <input
+                      type="text"
+                      class="form-control form-control-sm"
+                      placeholder="Ej: 1A00038"
+                      maxlength="24"
+                      [value]="getFacturaPedidoPago(item.pedidoId, item.transportistaId)"
+                      (input)="onFacturaPedidoPagoInput(item.pedidoId, item.transportistaId, $any($event.target).value)"
+                    >
+                  </td>
+                  <td class="text-end">{{ item.pendienteCobrar | number:'1.2-2' }}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="3" class="text-end">Total</th>
+                  <th class="text-end">{{ totalPendienteModalPedidoPago | number:'1.2-2' }}</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div *ngIf="modalErrorPedidoPago()" class="alert alert-danger py-2 mb-0" role="alert">
+            {{ modalErrorPedidoPago() }}
+          </div>
+        </div>
+        <div class="card-footer d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary" (click)="cerrarModalPedidoPago()">Cerrar</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="generandoPedidoPagoPdf()"
+            (click)="continuarPedidoPagoPDF()"
+          >
+            {{ generandoPedidoPagoPdf() ? 'Generando...' : 'Continuar' }}
+          </button>
         </div>
       </div>
     </div>

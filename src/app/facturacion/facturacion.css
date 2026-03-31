@@ -42,3 +42,42 @@
 .table-responsive {
 	border-radius: 10px;
 }
+
+.factura-row-cobro-si > td {
+	background: rgba(34, 197, 94, 0.08);
+	border-top: 2px solid #22c55e;
+	border-bottom: 2px solid #22c55e;
+}
+
+.factura-row-cobro-si > td:first-child {
+	border-left: 2px solid #22c55e;
+}
+
+.factura-row-cobro-si > td:last-child {
+	border-right: 2px solid #22c55e;
+}
+
+.pedido-pago-modal-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(2, 6, 23, 0.55);
+	z-index: 1040;
+}
+
+.pedido-pago-modal-wrap {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+	z-index: 1050;
+}
+
+.pedido-pago-modal {
+	width: min(760px, 100%);
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	box-shadow: 0 20px 48px rgba(2, 6, 23, 0.35);
+	border-radius: 12px;
+	overflow: hidden;
+}

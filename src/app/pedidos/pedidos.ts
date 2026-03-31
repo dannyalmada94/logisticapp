@@ -43,6 +43,7 @@ export class Pedidos implements OnInit, OnDestroy {
   showConfirmModal = signal(false);
   descripcionPedido = signal('');
   descripcionError = signal<string | null>(null);
+  private logoDataUrlCache: string | null | undefined = undefined;
 
   get filteredTransportistas() {
     const term = this.searchTerm().toLowerCase();
@@ -297,12 +298,64 @@ export class Pedidos implements OnInit, OnDestroy {
     this.descripcionError.set(null);
   }
 
-  generarPDF(clienteId: string, transportistaIds: string[], rubro: string, producto: string, origen: string, destino: string, tarifa: number, descripcion: string) {
+  private async getOptimizedLogoDataUrl(): Promise<string | null> {
+    if (this.logoDataUrlCache !== undefined) {
+      return this.logoDataUrlCache;
+    }
+
+    if (typeof window === 'undefined') {
+      this.logoDataUrlCache = null;
+      return null;
+    }
+
+    const dataUrl = await new Promise<string | null>((resolve) => {
+      const image = new Image();
+      image.onload = () => {
+        try {
+          const maxWidth = 480;
+          const scale = Math.min(1, maxWidth / image.naturalWidth);
+          const width = Math.max(1, Math.round(image.naturalWidth * scale));
+          const height = Math.max(1, Math.round(image.naturalHeight * scale));
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+
+          const context = canvas.getContext('2d');
+          if (!context) {
+            resolve(null);
+            return;
+          }
+
+          context.drawImage(image, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/png'));
+        } catch {
+          resolve(null);
+        }
+      };
+
+      image.onerror = () => resolve(null);
+      image.src = '/MiniLogoEHP.png';
+    });
+
+    this.logoDataUrlCache = dataUrl;
+    return dataUrl;
+  }
+
+  async generarPDF(clienteId: string, transportistaIds: string[], rubro: string, producto: string, origen: string, destino: string, tarifa: number, descripcion: string) {
     const cliente = this.clientes().find(c => c.id === clienteId);
     const transportistasSeleccionados = this.transportistas().filter(t => transportistaIds.includes(t.id));
     const fecha = new Date().toLocaleDateString();
 
-    const doc = new jsPDF('landscape');
+    const logoDataUrl = await this.getOptimizedLogoDataUrl();
+
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4',
+      compress: true,
+      putOnlyUsedFonts: true,
+    });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const marginX = 14;
@@ -332,10 +385,12 @@ export class Pedidos implements OnInit, OnDestroy {
 
     // Dibuja encabezado (logo + datos del pedido) y footer en la página actual
     const drawPageContent = () => {
-      try {
-        doc.addImage('/LogoCortoEHP.png', 'PNG', logoX, logoY, logoWidth, logoHeight);
-      } catch (e) {
-        console.warn('No se pudo cargar el logo');
+      if (logoDataUrl) {
+        try {
+          doc.addImage(logoDataUrl, 'PNG', logoX, logoY, logoWidth, logoHeight, 'logo-ehp', 'FAST');
+        } catch (e) {
+          console.warn('No se pudo cargar el logo');
+        }
       }
 
       const usableWidth = pageWidth - marginX * 2;
@@ -365,7 +420,6 @@ export class Pedidos implements OnInit, OnDestroy {
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
-      doc.text('Gestión comercial: Enzo Pucheta. Tel: 3512341394', pageWidth - 14, pageHeight - 18, { align: 'right' });
       doc.text('Logistica: Constanza Cristante. Tel: 3575417516', pageWidth - 14, pageHeight - 13, { align: 'right' });
     };
 
@@ -427,7 +481,7 @@ export class Pedidos implements OnInit, OnDestroy {
       alert('Pedido generado exitosamente.');
       
       // Generar PDF
-      this.generarPDF(
+      await this.generarPDF(
         formValue.clienteId,
         selectedTransportistaIds,
         formValue.rubro,
