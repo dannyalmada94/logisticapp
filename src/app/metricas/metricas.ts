@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  HostListener,
   Inject,
   OnDestroy,
   OnInit,
@@ -61,6 +62,11 @@ export class Metricas implements OnInit, OnDestroy {
   rubroFiltroRubroChart = signal('all');
   clientesFiltroOptions = signal<Array<{ id: string; nombre: string }>>([]);
   rubrosFiltroOptions = signal<string[]>([]);
+  transportistaViajesFiltroInput = signal('');
+  transportistaViajesSeleccionado = signal<{ id: string; nombre: string } | null>(null);
+  transportistasViajesFiltrados = signal<Array<{ id: string; nombre: string }>>([]);
+  mostrarDropdownViajesTransportistas = signal(false);
+  viajesDetalleTransportista = signal<Array<any>>([]);
 
   private unsubscribeClientes?: () => void;
   private unsubscribeTransportistas?: () => void;
@@ -337,6 +343,108 @@ export class Metricas implements OnInit, OnDestroy {
     this.refreshDerivedMetrics();
   }
 
+  getTransportistasUnicos(): Array<{ id: string; nombre: string }> {
+    const transportistasMap = new Map<string, string>();
+
+    this.latestPedidos.forEach((pedido: any) => {
+      if (pedido.finalizado) {
+        const transportistas = Array.isArray(pedido?.transportistaIds) ? pedido.transportistaIds : [];
+        transportistas.forEach((t: any) => {
+          const transportistaId = typeof t === 'string' ? t : t?.id;
+          const transportistaData = this.transportistasById[transportistaId] ?? {};
+          const nombre = transportistaData?.nombreTransporte || 'N/A';
+          if (nombre !== 'N/A' && !transportistasMap.has(nombre)) {
+            transportistasMap.set(nombre, transportistaId);
+          }
+        });
+      }
+    });
+
+    return Array.from(transportistasMap.entries())
+      .map(([nombre, id]) => ({ id, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  onTransportistaViajesFiltroInput(value: string) {
+    this.transportistaViajesFiltroInput.set(value);
+    this.mostrarDropdownViajesTransportistas.set(true);
+
+    if (!value.trim()) {
+      this.transportistasViajesFiltrados.set(this.getTransportistasUnicos());
+      return;
+    }
+
+    const filtrados = this.getTransportistasUnicos().filter(t =>
+      t.nombre.toLowerCase().includes(value.toLowerCase())
+    );
+    this.transportistasViajesFiltrados.set(filtrados);
+  }
+
+  seleccionarTransportistaViajes(transportista: { id: string; nombre: string }) {
+    this.transportistaViajesSeleccionado.set(transportista);
+    this.transportistaViajesFiltroInput.set(transportista.nombre);
+    this.mostrarDropdownViajesTransportistas.set(false);
+    const viajes = this.getViajesTransportista(transportista.id);
+    this.viajesDetalleTransportista.set(viajes);
+  }
+
+  limpiarFiltroTransportistaViajes() {
+    this.transportistaViajesFiltroInput.set('');
+    this.transportistaViajesSeleccionado.set(null);
+    this.mostrarDropdownViajesTransportistas.set(false);
+    this.viajesDetalleTransportista.set([]);
+  }
+
+  getViajesTransportista(transportistaId: string): Array<any> {
+    const viajes: Array<any> = [];
+
+    this.latestPedidos.forEach((pedido: any) => {
+      if (pedido.finalizado) {
+        const transportistas = Array.isArray(pedido?.transportistaIds) ? pedido.transportistaIds : [];
+        transportistas.forEach((t: any) => {
+          const currentId = typeof t === 'string' ? t : t?.id;
+          if (currentId === transportistaId) {
+            const transportistaData = this.transportistasById[transportistaId] ?? {};
+            const numeroPedido = pedido?.numeroPedido ?? 'N/A';
+            const clienteNombre = this.getClienteNombreById(pedido?.clienteId);
+            const ctg = typeof t === 'object' ? t.ctg : undefined;
+            const toneladas = typeof t === 'object' ? t.toneladasDescargadas : undefined;
+            const tarifa = Number(typeof t === 'object' ? (t.tarifa ?? pedido?.tarifa ?? 0) : (pedido?.tarifa ?? 0));
+            const comision = Number(transportistaData?.comision ?? 0);
+            const toneladasNum = Number(toneladas ?? 0);
+            const valorViaje = tarifa && toneladasNum ? tarifa * toneladasNum : 0;
+            const pendiente = valorViaje && comision ? valorViaje * (comision / 100) : 0;
+            const cobrado = typeof t === 'object' ? Boolean(t.cobrado) : false;
+            const cobradoValor = typeof t === 'object' ? (t.cobradoValor ?? 0) : 0;
+
+            viajes.push({
+              pedidoId: pedido.id,
+              transportistaId,
+              numeroPedido,
+              clienteNombre,
+              rubro: pedido?.rubro ?? 'N/A',
+              producto: pedido?.producto ?? 'N/A',
+              transporteNombre: transportistaData?.nombreTransporte || 'N/A',
+              ctg: ctg ?? 'N/A',
+              toneladas: toneladas ?? 'N/A',
+              tarifa: tarifa || 0,
+              valorViaje,
+              comision: comision ?? 0,
+              pendienteCobrar: pendiente,
+              fechaCobro: typeof t === 'object' ? (t.fechaCobro ?? '') : '',
+              cobro: typeof t === 'object' ? (t.cobro ?? 'NO') : 'NO',
+              pago: typeof t === 'object' ? (t.pago ?? 'NO') : 'NO',
+              cobrado,
+              cobradoValor,
+            });
+          }
+        });
+      }
+    });
+
+    return viajes;
+  }
+
   private normalizeTextLabel(value: unknown, fallback: string): string {
     const text = String(value ?? '').trim();
     if (!text) {
@@ -520,6 +628,8 @@ export class Metricas implements OnInit, OnDestroy {
     this.pedidosCount.set(pedidos.length);
 
     const finalizados = pedidos.filter((p: any) => Boolean(p?.finalizado));
+
+    // Calcular viajes finalizados
     const viajesFinalizados = finalizados.reduce((acc: number, pedido: any) => {
       const transportistas = Array.isArray(pedido?.transportistaIds) ? pedido.transportistaIds : [];
       return acc + transportistas.length;
@@ -1036,6 +1146,13 @@ export class Metricas implements OnInit, OnDestroy {
         },
       },
     });
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey() {
+    if (this.mostrarDropdownViajesTransportistas()) {
+      this.mostrarDropdownViajesTransportistas.set(false);
+    }
   }
 
   ngOnDestroy() {

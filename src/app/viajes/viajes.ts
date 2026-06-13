@@ -200,15 +200,16 @@ export class Viajes implements OnInit, OnDestroy {
     return 'N/A';
   }
 
-  constructor(private readonly db: RealtimeDatabaseService, private fb: FormBuilder) {
-    this.editForm = this.fb.group({
-      clienteId: ['', Validators.required],
-      rubro: ['', Validators.required],
-      producto: ['', Validators.required],
-      origen: ['', Validators.required],
-      destino: ['', Validators.required],
-    });
-  }
+constructor(private readonly db: RealtimeDatabaseService, private fb: FormBuilder) {
+  this.editForm = this.fb.group({
+    clienteId: ['', Validators.required],
+    rubro: ['', Validators.required],
+    producto: ['', Validators.required],
+    origen: ['', Validators.required],
+    destino: ['', Validators.required],
+    createdAt: ['', Validators.required],
+  });
+}
 
   get clienteEditSeleccionado() {
     const clienteId = this.editForm.get('clienteId')?.value;
@@ -251,9 +252,15 @@ export class Viajes implements OnInit, OnDestroy {
     return [] as string[];
   }
 
-  formatDate(timestamp: number): string {
-    return timestamp ? new Date(timestamp).toLocaleDateString() : 'N/A';
-  }
+
+formatDate(timestamp: number): string {
+  if (!timestamp) return 'N/A';
+  const date = new Date(timestamp);
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${day}/${month}/${year}`;
+}
 
   changePage(page: number) {
     if (page < 1 || page > this.totalPages) {
@@ -279,24 +286,24 @@ export class Viajes implements OnInit, OnDestroy {
     });
   }
 
-  startEdit(pedido: { id: string; data: any }) {
-    this.editingPedido.set(pedido);
-    this.editForm.patchValue({
-      clienteId: pedido.data.clienteId,
-      rubro: pedido.data.rubro ?? '',
-      producto: pedido.data.producto ?? '',
-      origen: pedido.data.origen,
-      destino: pedido.data.destino,
-    });
-    // Handle both old format (array of strings) and new format (array of objects)
-    const transportistas = pedido.data.transportistaIds || [];
-    const defaultTarifa = pedido.data?.tarifa;
-    const selected = transportistas.map((t: any) => 
-      typeof t === 'string' ? { id: t, tarifa: defaultTarifa } : { ...t, tarifa: t.tarifa ?? defaultTarifa }
-    );
-    this.selectedTransportistasEdit.set(selected);
-    this.showEditForm.set(true);
-  }
+startEdit(pedido: { id: string; data: any }) {
+  this.editingPedido.set(pedido);
+  this.editForm.patchValue({
+    clienteId: pedido.data.clienteId,
+    rubro: pedido.data.rubro ?? '',
+    producto: pedido.data.producto ?? '',
+    origen: pedido.data.origen,
+    destino: pedido.data.destino,
+    createdAt: this.formatDateToInput(pedido.data.createdAt),
+  });
+  const transportistas = pedido.data.transportistaIds || [];
+  const defaultTarifa = pedido.data?.tarifa;
+  const selected = transportistas.map((t: any) => 
+    typeof t === 'string' ? { id: t, tarifa: defaultTarifa } : { ...t, tarifa: t.tarifa ?? defaultTarifa }
+  );
+  this.selectedTransportistasEdit.set(selected);
+  this.showEditForm.set(true);
+}
 
   toggleTransportistaEdit(id: string) {
     const current = this.selectedTransportistasEdit();
@@ -348,35 +355,40 @@ export class Viajes implements OnInit, OnDestroy {
     this.selectedTransportistasEdit.set(updated);
   }
 
-  async saveEdit() {
-    if (this.editForm.invalid || this.selectedTransportistasEdit().length === 0) {
-      this.errorMessage.set('Selecciona al menos 1 transportista.');
-      return;
-    }
-
-    const pedido = this.editingPedido();
-    if (!pedido) return;
-
-    const formValue = this.editForm.value;
-    try {
-      await this.db.update(`pedidos/${pedido.id}`, {
-        clienteId: formValue.clienteId,
-        rubro: formValue.rubro,
-        producto: formValue.producto,
-        origen: formValue.origen,
-        destino: formValue.destino,
-        transportistaIds: this.selectedTransportistasEdit(),
-        updatedAt: Date.now(),
-      });
-      this.errorMessage.set(null);
-      this.showEditForm.set(false);
-      this.editingPedido.set(null);
-      this.selectedTransportistasEdit.set([]);
-    } catch (err) {
-      console.error('Error editando pedido:', err);
-      this.errorMessage.set('No se pudo editar el pedido.');
-    }
+async saveEdit() {
+  if (this.editForm.invalid || this.selectedTransportistasEdit().length === 0) {
+    this.errorMessage.set('Selecciona al menos 1 transportista.');
+    return;
   }
+
+  const pedido = this.editingPedido();
+  if (!pedido) return;
+
+  const formValue = this.editForm.value;
+  const [year, month, day] = formValue.createdAt.split('-').map(Number);
+  const createdAtDate = new Date(Date.UTC(year, month - 1, day));
+  const createdAtTimestamp = createdAtDate.getTime();
+
+  try {
+    await this.db.update(`pedidos/${pedido.id}`, {
+      clienteId: formValue.clienteId,
+      rubro: formValue.rubro,
+      producto: formValue.producto,
+      origen: formValue.origen,
+      destino: formValue.destino,
+      transportistaIds: this.selectedTransportistasEdit(),
+      createdAt: createdAtTimestamp,
+      updatedAt: Date.now(),
+    });
+    this.errorMessage.set(null);
+    this.showEditForm.set(false);
+    this.editingPedido.set(null);
+    this.selectedTransportistasEdit.set([]);
+  } catch (err) {
+    console.error('Error editando pedido:', err);
+    this.errorMessage.set('No se pudo editar el pedido.');
+  }
+}
 
   cancelEdit() {
     this.showEditForm.set(false);
@@ -396,4 +408,13 @@ export class Viajes implements OnInit, OnDestroy {
       this.errorMessage.set('No se pudo eliminar el pedido.');
     }
   }
+
+formatDateToInput(timestamp: number): string {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 }

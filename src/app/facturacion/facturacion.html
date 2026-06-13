@@ -19,6 +19,63 @@
     <div class="facturacion-card">
       <div class="facturacion-card-header">Detalle de Facturación</div>
       <div class="facturacion-card-body">
+        <!-- Buscador de Transportistas -->
+        <div class="mb-3 position-relative">
+          <label class="form-label mb-2">Filtrar por Transporte</label>
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="Buscar transportista..."
+              [value]="transportisteFiltroInput()"
+              (input)="onTransportistaFiltroInput($any($event.target).value)"
+              (focus)="mostrarDropdownTransportistas.set(true)"
+              autocomplete="off"
+            />
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              type="button"
+              *ngIf="transportisteFiltroSeleccionado()"
+              (click)="limpiarFiltroTransportista()"
+              title="Limpiar filtro"
+            >
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+          
+          <!-- Dropdown con opciones -->
+          <div
+            class="position-absolute top-100 start-0 w-100 bg-white border border-top-0 shadow-sm"
+            style="z-index: 1000; max-height: 250px; overflow-y: auto; border-radius: 0 0 4px 4px;"
+            *ngIf="mostrarDropdownTransportistas() && transportistasFiltrados().length > 0"
+          >
+            <div
+              class="p-2 cursor-pointer hover-highlight"
+              *ngFor="let transporte of transportistasFiltrados()"
+              (click)="seleccionarTransportista(transporte)"
+              style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;"
+            >
+              {{ transporte.nombre }}
+            </div>
+          </div>
+          
+          <!-- Mensaje cuando no hay resultados -->
+          <div
+            class="position-absolute top-100 start-0 w-100 bg-white border border-top-0 shadow-sm"
+            style="z-index: 1000; border-radius: 0 0 4px 4px;"
+            *ngIf="mostrarDropdownTransportistas() && transportistasFiltrados().length === 0 && transportisteFiltroInput()"
+          >
+            <div class="p-2 text-muted text-center">
+              <small>No se encontraron transportistas</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mostrar transportista seleccionado -->
+        <div class="mb-3" *ngIf="transportisteFiltroSeleccionado()">
+          <small class="text-muted">Mostrando viajes de: <strong>{{ transportisteFiltroInput() }}</strong></small>
+        </div>
+
         <div *ngIf="paginatedFacturas.length; else empty">
           <div class="table-responsive">
             <table class="table table-hover table-sm align-middle mb-0">

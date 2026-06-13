@@ -51,13 +51,24 @@
             </div>
 
             <div class="col-md-2">
-              <label for="origenSelect" class="form-label">Origen</label>
-              <select class="form-select" id="origenSelect" formControlName="origen" [disabled]="!pedidoForm.get('rubro')?.value">
-                <option value="">-- Origen --</option>
-                <option *ngFor="let origen of origenesDelRubroSeleccionado" [value]="origen">{{ origen | titlecase }}</option>
-              </select>
-              <div *ngIf="pedidoForm.get('origen')?.invalid && pedidoForm.get('origen')?.touched" class="text-danger small mt-1">Requerido.</div>
-            </div>
+  <label for="origenSelect" class="form-label">Origen</label>
+  <select class="form-select" id="origenSelect" formControlName="origen" (change)="onOrigenChange($event)" [disabled]="!pedidoForm.get('rubro')?.value">
+    <option value="">-- Origen --</option>
+    <option *ngFor="let origen of origenesDelRubroSeleccionado" [value]="origen">{{ origen | titlecase }}</option>
+  </select>
+  <div *ngIf="pedidoForm.get('origen')?.invalid && pedidoForm.get('origen')?.touched" class="text-danger small mt-1">Requerido.</div>
+</div>
+
+<div class="col-md-2" *ngIf="pedidoForm.get('origen')?.value === 'campo'">
+  <label for="nombreCampoInput" class="form-label">Nombre del Campo</label>
+ <input 
+  type="text" 
+  class="form-control" 
+  id="nombreCampoInput" 
+  formControlName="nombreCampo" 
+  placeholder="Ej: Campo Norte"
+>
+</div>
             <div class="col-md-2">
               <label for="destinoSelect" class="form-label">Destino</label>
               <select class="form-select" id="destinoSelect" formControlName="destino" [disabled]="!pedidoForm.get('rubro')?.value">

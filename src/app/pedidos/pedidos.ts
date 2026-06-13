@@ -43,6 +43,7 @@ export class Pedidos implements OnInit, OnDestroy {
   showConfirmModal = signal(false);
   descripcionPedido = signal('');
   descripcionError = signal<string | null>(null);
+  nombreCampo = signal('');
   private logoDataUrlCache: string | null | undefined = undefined;
 
   get filteredTransportistas() {
@@ -73,16 +74,17 @@ export class Pedidos implements OnInit, OnDestroy {
   private unsubscribeTransportistas?: () => void;
   private unsubscribePedidos?: () => void;
 
-  constructor(private readonly db: RealtimeDatabaseService, private fb: FormBuilder) {
-    this.pedidoForm = this.fb.group({
-      clienteId: ['', Validators.required],
-      rubro: ['', Validators.required],
-      producto: ['', Validators.required],
-      origen: ['', Validators.required],
-      destino: ['', Validators.required],
-      tarifa: [0, [Validators.required, Validators.min(0)]],
-    });
-  }
+constructor(private readonly db: RealtimeDatabaseService, private fb: FormBuilder) {
+  this.pedidoForm = this.fb.group({
+    clienteId: ['', Validators.required],
+    rubro: ['', Validators.required],
+    producto: ['', Validators.required],
+    origen: ['', Validators.required],
+    destino: ['', Validators.required],
+    tarifa: [0, [Validators.required, Validators.min(0)]],
+    nombreCampo: [''],
+  });
+}
 
   get clienteSeleccionado() {
     const clienteId = this.pedidoForm.get('clienteId')?.value;
@@ -253,14 +255,23 @@ export class Pedidos implements OnInit, OnDestroy {
   }
 
   onRubroChange(event: Event) {
-    const target = event.target as HTMLSelectElement;
-    this.pedidoForm.patchValue({
-      rubro: target.value,
-      producto: '',
-      origen: '',
-      destino: '',
-    });
+  const target = event.target as HTMLSelectElement;
+  this.pedidoForm.patchValue({
+    rubro: target.value,
+    producto: '',
+    origen: '',
+    destino: '',
+    nombreCampo: '',
+  });
+  this.nombreCampo.set('');
+}
+ onOrigenChange(event: Event) {
+  const target = event.target as HTMLSelectElement;
+  if (target.value !== 'campo') {
+    this.nombreCampo.set('');
+    this.pedidoForm.patchValue({ nombreCampo: '' });
   }
+}
 
   toggleTransportista(id: string) {
     const current = this.selectedTransportistas();
@@ -342,7 +353,7 @@ export class Pedidos implements OnInit, OnDestroy {
     return dataUrl;
   }
 
-  async generarPDF(clienteId: string, transportistaIds: string[], rubro: string, producto: string, origen: string, destino: string, tarifa: number, descripcion: string) {
+  async generarPDF(clienteId: string, transportistaIds: string[], rubro: string, producto: string, origen: string, destino: string, tarifa: number, descripcion: string, nombreCampo: string = '')  {
     const cliente = this.clientes().find(c => c.id === clienteId);
     const transportistasSeleccionados = this.transportistas().filter(t => transportistaIds.includes(t.id));
     const fecha = new Date().toLocaleDateString();
@@ -374,14 +385,14 @@ export class Pedidos implements OnInit, OnDestroy {
     const tableStartY = valuesY + 8;
 
     const columns = [
-      { label: 'Cliente', value: cliente?.data?.nombre || 'N/A' },
-      { label: 'Fecha', value: fecha },
-      { label: 'Tarifa', value: `$${tarifa}` },
-      { label: 'Rubro', value: rubro || 'N/A' },
-      { label: 'Producto', value: producto || 'N/A' },
-      { label: 'Origen', value: origen || 'N/A' },
-      { label: 'Destino', value: destino || 'N/A' },
-    ];
+  { label: 'Cliente', value: cliente?.data?.nombre || 'N/A' },
+  { label: 'Fecha', value: fecha },
+  { label: 'Tarifa', value: `$${tarifa}` },
+  { label: 'Rubro', value: rubro || 'N/A' },
+  { label: 'Producto', value: producto || 'N/A' },
+  { label: 'Origen', value: nombreCampo ? nombreCampo : (origen || 'N/A') },
+  { label: 'Destino', value: destino || 'N/A' },
+];
 
     // Dibuja encabezado (logo + datos del pedido) y footer en la página actual
     const drawPageContent = () => {
@@ -467,30 +478,32 @@ export class Pedidos implements OnInit, OnDestroy {
 
     try {
       await this.db.push('pedidos', {
-        numeroPedido: this.pedidosCount() + 1,
-        clienteId: formValue.clienteId,
-        rubro: formValue.rubro,
-        producto: formValue.producto,
-        transportistaIds: transportistaPayload,
-        origen: formValue.origen,
-        destino: formValue.destino,
-        tarifa: formValue.tarifa,
-        createdAt: Date.now(),
-      });
+  numeroPedido: this.pedidosCount() + 1,
+  clienteId: formValue.clienteId,
+  rubro: formValue.rubro,
+  producto: formValue.producto,
+  transportistaIds: transportistaPayload,
+  origen: formValue.origen,
+  destino: formValue.destino,
+  tarifa: formValue.tarifa,
+  nombreCampo: formValue.nombreCampo || '',
+  createdAt: Date.now(),
+});
       this.errorMessage.set(null);
       alert('Pedido generado exitosamente.');
       
       // Generar PDF
       await this.generarPDF(
-        formValue.clienteId,
-        selectedTransportistaIds,
-        formValue.rubro,
-        formValue.producto,
-        formValue.origen,
-        formValue.destino,
-        formValue.tarifa,
-        descripcion,
-      );
+  formValue.clienteId,
+  selectedTransportistaIds,
+  formValue.rubro,
+  formValue.producto,
+  formValue.origen,
+  formValue.destino,
+  formValue.tarifa,
+  descripcion,
+  formValue.nombreCampo,
+);
       
       this.pedidoForm.reset();
       this.selectedTransportistas.set([]);

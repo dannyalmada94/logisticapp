@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RealtimeDatabaseService } from '../services/realtime-db.service';
 import { RouterLink } from '@angular/router';
@@ -26,6 +26,10 @@ export class Facturacion implements OnInit, OnDestroy {
   facturaPorItem = signal<Record<string, string>>({});
   modalErrorPedidoPago = signal<string | null>(null);
   generandoPedidoPagoPdf = signal(false);
+  transportisteFiltroInput = signal('');
+  transportisteFiltroSeleccionado = signal<string | null>(null);
+  transportistasFiltrados = signal<Array<{ nombre: string; id: string }>>([]);
+  mostrarDropdownTransportistas = signal(false);
   private logoDataUrlCache: string | null | undefined = undefined;
   private footerDataUrlCache: string | null | undefined = undefined;
 
@@ -346,13 +350,69 @@ export class Facturacion implements OnInit, OnDestroy {
     return facturas;
   }
 
+  getTransportistasUnicos(): Array<{ nombre: string; id: string }> {
+    const facturas = this.getFacturas();
+    const transportistasMap = new Map<string, string>();
+    
+    facturas.forEach(f => {
+      if (f.transporteNombre && !transportistasMap.has(f.transporteNombre)) {
+        transportistasMap.set(f.transporteNombre, f.transportistaId);
+      }
+    });
+
+    return Array.from(transportistasMap.entries())
+      .map(([nombre, id]) => ({ nombre, id }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  onTransportistaFiltroInput(value: string) {
+    this.transportisteFiltroInput.set(value);
+    this.mostrarDropdownTransportistas.set(true);
+
+    if (!value.trim()) {
+      this.transportistasFiltrados.set(this.getTransportistasUnicos());
+      return;
+    }
+
+    const filtrados = this.getTransportistasUnicos().filter(t =>
+      t.nombre.toLowerCase().includes(value.toLowerCase())
+    );
+    this.transportistasFiltrados.set(filtrados);
+  }
+
+  seleccionarTransportista(transportista: { nombre: string; id: string }) {
+    this.transportisteFiltroSeleccionado.set(transportista.id);
+    this.transportisteFiltroInput.set(transportista.nombre);
+    this.mostrarDropdownTransportistas.set(false);
+    this.currentPage.set(1);
+  }
+
+  limpiarFiltroTransportista() {
+    this.transportisteFiltroInput.set('');
+    this.transportisteFiltroSeleccionado.set(null);
+    this.mostrarDropdownTransportistas.set(false);
+    this.currentPage.set(1);
+  }
+
+  getFacturasFiltradas() {
+    const facturas = this.getFacturas();
+    const transportistaId = this.transportisteFiltroSeleccionado();
+
+    if (!transportistaId) {
+      return facturas;
+    }
+
+    return facturas.filter(f => f.transportistaId === transportistaId);
+  }
+
   get paginatedFacturas() {
+    const facturas = this.getFacturasFiltradas();
     const start = (this.currentPage() - 1) * this.itemsPerPage;
-    return this.getFacturas().slice(start, start + this.itemsPerPage);
+    return facturas.slice(start, start + this.itemsPerPage);
   }
 
   get totalPages() {
-    return Math.ceil(this.getFacturas().length / this.itemsPerPage);
+    return Math.ceil(this.getFacturasFiltradas().length / this.itemsPerPage);
   }
 
   get pageNumbers() {
@@ -690,6 +750,13 @@ export class Facturacion implements OnInit, OnDestroy {
     this.pedidoPagoModalItems.set([]);
     this.pedidosPagoSeleccionados.set(new Set());
     this.facturaPorItem.set({});
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey() {
+    if (this.mostrarDropdownTransportistas()) {
+      this.mostrarDropdownTransportistas.set(false);
+    }
   }
 }
 

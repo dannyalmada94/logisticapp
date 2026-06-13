@@ -73,6 +73,123 @@
 	</div>
 
 	<div class="metricas-card mt-4">
+		<div class="metricas-card-header">Metricas de viajes</div>
+		<div class="metricas-card-body">
+			<p class="mb-3">Selecciona un transportista para ver el detalle de sus viajes en facturación y cobrados.</p>
+
+			<!-- Buscador de Transportistas -->
+			<div class="mb-3 position-relative">
+				<label class="form-label mb-2">Filtrar por Transporte</label>
+				<div class="input-group">
+					<input
+						type="text"
+						class="form-control form-control-sm"
+						placeholder="Buscar transportista..."
+						[value]="transportistaViajesFiltroInput()"
+						(input)="onTransportistaViajesFiltroInput($any($event.target).value)"
+						(focus)="mostrarDropdownViajesTransportistas.set(true)"
+						autocomplete="off"
+					/>
+					<button
+						class="btn btn-outline-secondary btn-sm"
+						type="button"
+						*ngIf="transportistaViajesSeleccionado()"
+						(click)="limpiarFiltroTransportistaViajes()"
+						title="Limpiar filtro"
+					>
+						<i class="bi bi-x"></i>
+					</button>
+				</div>
+
+				<!-- Dropdown con opciones -->
+				<div
+					class="position-absolute top-100 start-0 w-100 bg-white border border-top-0 shadow-sm"
+					style="z-index: 1000; max-height: 250px; overflow-y: auto; border-radius: 0 0 4px 4px;"
+					*ngIf="mostrarDropdownViajesTransportistas() && transportistasViajesFiltrados().length > 0"
+				>
+					<div
+						class="p-2 cursor-pointer hover-highlight"
+						*ngFor="let transporte of transportistasViajesFiltrados()"
+						(click)="seleccionarTransportistaViajes(transporte)"
+						style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;"
+					>
+						{{ transporte.nombre }}
+					</div>
+				</div>
+
+				<!-- Mensaje cuando no hay resultados -->
+				<div
+					class="position-absolute top-100 start-0 w-100 bg-white border border-top-0 shadow-sm"
+					style="z-index: 1000; border-radius: 0 0 4px 4px;"
+					*ngIf="mostrarDropdownViajesTransportistas() && transportistasViajesFiltrados().length === 0 && transportistaViajesFiltroInput()"
+				>
+					<div class="p-2 text-muted text-center">
+						<small>No se encontraron transportistas</small>
+					</div>
+				</div>
+			</div>
+
+			<!-- Mostrar transportista seleccionado y detalle de viajes -->
+			<div *ngIf="transportistaViajesSeleccionado()">
+				<div class="mb-3">
+					<small class="text-muted">Mostrando viajes de: <strong>{{ transportistaViajesFiltroInput() }}</strong></small>
+				</div>
+
+				<div class="table-responsive">
+					<table class="table table-hover table-sm align-middle mb-0" *ngIf="viajesDetalleTransportista().length > 0; else noViajesTemplate">
+						<thead class="table-dark">
+							<tr>
+								<th>N.º Pedido</th>
+								<th>Cliente</th>
+								<th>Rubro</th>
+								<th>Producto</th>
+								<th>CTG</th>
+								<th>Toneladas</th>
+								<th>Tarifa</th>
+								<th>Valor Viaje</th>
+								<th>Comisión %</th>
+								<th>Pendiente a Cobrar</th>
+								<th>Cobro</th>
+								<th>Pago</th>
+								<th>Estado</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr
+								*ngFor="let viaje of viajesDetalleTransportista()"
+								[class.viaje-row-cobrado]="viaje.cobrado"
+							>
+								<td>{{ viaje.numeroPedido }}</td>
+								<td>{{ viaje.clienteNombre }}</td>
+								<td>{{ viaje.rubro | titlecase }}</td>
+								<td>{{ viaje.producto | titlecase }}</td>
+								<td>{{ viaje.ctg }}</td>
+								<td>{{ viaje.toneladas }}</td>
+								<td>{{ viaje.tarifa | number:'1.2-2' }}</td>
+								<td>{{ viaje.valorViaje | number:'1.2-2' }}</td>
+								<td>{{ viaje.comision }}%</td>
+								<td>{{ viaje.pendienteCobrar | number:'1.2-2' }}</td>
+								<td>{{ viaje.cobro }}</td>
+								<td>{{ viaje.pago }}</td>
+								<td>
+									<span *ngIf="viaje.cobrado" class="badge bg-success">Cobrado</span>
+									<span *ngIf="!viaje.cobrado" class="badge bg-warning text-dark">En Facturación</span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<ng-template #noViajesTemplate>
+						<div class="text-center text-muted py-4">
+							<p>No hay viajes registrados para este transportista</p>
+						</div>
+					</ng-template>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="metricas-card mt-4">
 		<div class="metricas-card-header">Evolución de métricas</div>
 		<div class="metricas-card-body">
 			<div class="row g-3">
